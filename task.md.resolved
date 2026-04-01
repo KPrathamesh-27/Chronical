@@ -1,0 +1,36 @@
+# Chrono Witness - Task Checklist
+
+## Planning
+- [x] Review project directory
+- [x] Create implementation plan
+
+## Backend (server.js)
+- [ ] Express + CORS + dotenv setup
+- [ ] Gemini 1.5 Flash integration with system prompt
+- [ ] /api/chronicle endpoint (narration + multi-turn chat)
+- [ ] /api/heatmap endpoint (GET + POST for era visit tracking)
+- [ ] In-memory heatmap store (JSON file persistence for demo)
+- [ ] package.json + .env.example
+
+## Frontend (index.html - single file app)
+- [ ] State management & routing (browse, custom, timeline, scene, saved)
+- [ ] Warp transition animation (gold ring expanding)
+- [ ] Browse Archive page (7 figures with curated moments)
+- [ ] Custom Vision page (prompt input + 7 example chips)
+- [ ] Timeline Scrubber per figure (labeled event stops)
+- [ ] Canvas atmosphere system (war/electric/rome/mystery/ancient)
+- [ ] Scene view: narration panel + chat panel
+- [ ] Save / favorite scenes (localStorage persistence)
+- [ ] Saved Archive page
+- [ ] Timeline Heatmap page (era visit frequency bar chart)
+- [ ] Sentiment overlay (particle color shift from narration keywords)
+- [ ] Mobile responsiveness breakpoints
+
+## Verification
+- [ ] Run backend: node server.js
+- [ ] Open frontend in browser via Live Server / python http.server
+- [ ] Test narration generation for 2 figures
+- [ ] Test multi-turn chat
+- [ ] Test save + reload persistence
+- [ ] Test heatmap increments on scene entry
+- [ ] Test sentiment overlay color change

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO — Cinematic AI Time-Travel</title>
+    <meta name="description" content="Cinematic time-travel intelligence. Witness the moments that shaped history.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="echo-cursor"></div>
+<div id="echo-cursor-dot"></div>
+
+<div id="app">
+
+    <!-- ─── NAVIGATION ──────────────────────────────────────────────── -->
+    <nav id="main-nav">
+        <div class="nav-brand" onclick="echoApp.go('home')">
+            <span class="brand-text">ECHO</span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active" onclick="echoApp.go('chronicles'); return false;" id="nav-chronicles">CHRONICLES</a>
+            <a href="#" class="nav-link" onclick="echoApp.go('saved'); return false;" id="nav-archive">ARCHIVE</a>
+            <a href="#" class="nav-link" onclick="echoApp.go('heatmap'); return false;" id="nav-cartography">CARTOGRAPHY</a>
+            <a href="#" class="nav-link" onclick="echoApp.go('forge'); return false;" id="nav-nexus">NEXUS</a>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" id="btn-search" title="Search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="nav-icon-btn" onclick="toggleAPI()" title="API">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ─── PAGE: NEXUS HERO ────────────────────────────────────────── -->
+    <div id="page-home" class="page active">
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-watermark">NEXUS</div>
+            <div class="hero-left">
+                <div class="hero-eyebrow mono">ECHO WITNESS // ACTIVE</div>
+                <h1 class="hero-headline">THE ARCHIVE IS<br>BREATHING.</h1>
+                <p class="hero-body">Cutting memories of the historical past. Every shard recovered is a fragment of the archive's original heart.</p>
+                <div class="hero-ctas">
+                    <button class="cta-primary" onclick="echoApp.go('chronicles')">THE CHRONICLE</button>
+                    <button class="cta-secondary" onclick="echoApp.go('forge')">PROTOCOL. A</button>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-artifact-wrap" id="crystal-wrap">
+                    <canvas id="chronosphere-canvas" class="chronosphere-canvas"></canvas>
+                    <div class="hero-crystal-label mono">ECHO_CHRONOSPHERE // NODE_001</div>
+                </div>
+            </div>
+            <div class="hero-scroll-indicator">
+                <span class="mono">SCROLL</span>
+                <div class="scroll-line"></div>
+            </div>
+            <div class="hero-advance-btn">+</div>
+        </section>
+
+        <!-- Chronicles Infinite Carousel -->
+        <section class="chronicles-section reveal" id="section-chronicles">
+            <div class="chronicles-header">
+                <h2 class="chronicles-title reveal-text">CHRONICLES</h2>
+                <span class="chronicles-sub mono">VOLUME_03 // ECHO_ARCHIVES</span>
+            </div>
+
+            <div class="carousel-stage" id="carousel-stage">
+                <!-- Arrow Left -->
+                <button class="carousel-arrow carousel-arrow-left" id="arrow-prev" aria-label="Previous">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+
+                <!-- Slide track — populated by JS -->
+                <div class="carousel-track" id="carousel-track"></div>
+
+                <!-- Arrow Right -->
+                <button class="carousel-arrow carousel-arrow-right" id="arrow-next" aria-label="Next">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+
+            <!-- Pagination dots -->
+            <div class="carousel-dots" id="carousel-dots"></div>
+        </section>
+
+        <!-- Heatmap + Stats Row -->
+        <section class="data-section">
+            <div class="heatmap-panel">
+                <div class="panel-label mono">GLOBAL HEATMAP</div>
+                <canvas id="heatmap-canvas" class="heatmap-canvas-dark"></canvas>
+                <div class="heatmap-coords">
+                    <span class="mono coord-item">00.0BPM 14</span>
+                    <span class="mono coord-item">0.232° W</span>
+                    <span class="mono coord-item">440.3k 14</span>
+                </div>
+            </div>
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-icon">✦</div>
+                    <div class="stat-label mono">ECHO_ACCURACY</div>
+                    <div class="stat-value" id="stat-accuracy">98.4%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-sm">↗</div>
+                    <div class="stat-label mono">LIVE_ARCHIVE</div>
+                    <div class="stat-value-sm" id="stat-archive">12.4K</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Archive Footer Section -->
+        <section class="archive-section">
+            <div class="archive-watermark">ARCHIVE</div>
+            <div class="archive-content">
+                <blockquote class="archive-quote">"The past is not a destination, but a frequency we must learn to tune."</blockquote>
+                <div class="archive-links mono">
+                    <a href="#" onclick="echoApp.go('chronicles'); return false;">THE ECHO</a>
+                    <span class="separator">—</span>
+                    <a href="#" onclick="echoApp.go('forge'); return false;">CORE_PROTOCOL_03</a>
+                    <span class="separator">—</span>
+                    <a href="#">GRAND_COLLECTION</a>
+                </div>
+            </div>
+            <div class="site-footer mono">
+                <span>© ECHO SYSTEM. ALL RIGHTS RESERVED.</span>
+                <div class="footer-links">
+                    <a href="#">TERMS & CONDITIONS</a>
+                    <a href="#">MANAGE COOKIES</a>
+                    <a href="#">PRIVACY POLICY</a>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ─── PAGE: CHRONICLES ─────────────────────────────────────── -->
+    <div id="page-chronicles" class="page">
+        <!-- Temporal vortex canvas background -->
+        <canvas id="chronicles-vortex" class="chronicles-vortex-bg"></canvas>
+
+        <!-- Moving scanlines overlay -->
+        <div class="chronicles-scanlines"></div>
+
+        <div class="chronicles-page-container">
+            <div class="page-watermark">CHRONICLES</div>
+
+            <!-- Temporal scanner HUD -->
+            <div class="temporal-hud mono" id="temporal-hud">
+                <span class="hud-item" id="hud-era">ERA: SCANNING...</span>
+                <span class="hud-sep">///</span>
+                <span class="hud-item" id="hud-coord">LAT: --.-° LON: --.-°</span>
+                <span class="hud-sep">///</span>
+                <span class="hud-item" id="hud-status">STATUS: TEMPORAL_LOCK</span>
+            </div>
+
+            <div class="page-header">
+                <h1 class="page-title chronicles-glitch-title" data-text="CHRONICLES">CHRONICLES</h1>
+                <p class="page-sub mono">SELECT A WITNESS TO BEGIN THE TEMPORAL SEQUENCE</p>
+            </div>
+            <div class="chronicles-full-grid" id="character-carousel">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── PAGE: FORGE / NEXUS ─────────────────────────────────────── -->
+    <div id="page-forge" class="page">
+        <div class="forge-page-container">
+            <div class="page-watermark">NEXUS</div>
+            <div class="page-header">
+                <h1 class="page-title">NEXUS FORGE</h1>
+                <p class="page-sub mono">SYNTHESIZE A TEMPORAL MEMORY</p>
+            </div>
+            <div class="forge-interface">
+                <div class="forge-input-group">
+                    <input type="text" id="imagine-input" class="forge-input" placeholder="Describe the moment you wish to witness...">
+                    <button class="forge-submit" id="btn-imagine" onclick="echoApp.handleImagine()">
+                        <span>FORGE MEMORY</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </div>
+                <div id="narration-text" class="forge-output">
+                    <span class="mono" style="color: var(--muted-dark)">// AWAITING TEMPORAL SYNTHESIS...</span>
+                </div>
+                <div class="forge-actions" id="forge-actions" style="display:none;">
+                    <button class="action-btn" id="btn-voice" onclick="toggleVoice()">▶ NARRATE</button>
+                    <button class="action-btn" id="btn-save" onclick="toggleSave()">⊕ ARCHIVE MOMENT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── PAGE: WITNESS (Character Detail) ───────────────────────── -->
+    <div id="page-witness" class="page">
+        <div class="witness-page-container">
+            <div class="witness-back" onclick="echoApp.go('chronicles')">
+                <span>← RETURN TO CHRONICLES</span>
+            </div>
+            <div class="witness-layout">
+                <div class="witness-left">
+                    <div class="witness-figure-img-wrap">
+                        <img src="" alt="" id="witness-figure-img" class="witness-figure-img">
+                    </div>
+                </div>
+                <div class="witness-right">
+                    <div class="witness-eyebrow mono" id="witness-coords">XXXX :: COORDINATES PENDING</div>
+                    <h1 class="witness-name" id="witness-title">Awaiting Selection</h1>
+                    <div id="narration-text-witness" class="witness-narration">
+                        <span class="mono" style="color:var(--muted-dark)">// TUNING TO TEMPORAL FREQUENCY...</span>
+                    </div>
+                    <div class="witness-controls">
+                        <button class="action-btn" id="btn-voice-witness" onclick="toggleVoice()">▶ NARRATE</button>
+                        <button class="action-btn secondary-btn" id="btn-save" onclick="toggleSave()">⊕ SAVE MOMENT</button>
+                    </div>
+                    <!-- Moments selector -->
+                    <div class="moment-selector" id="moment-selector">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <!-- Chat -->
+            <div class="witness-chat">
+                <div class="chat-title mono">INTERROGATE THE TIMELINE</div>
+                <div class="chat-messages-dark" id="chat-messages"></div>
+                <div class="chat-input-row">
+                    <input type="text" id="chat-input" class="chat-input-dark" placeholder="ASK THE CHRONICLE...">
+                    <button class="chat-send-dark" onclick="echoApp.sendChat()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── PAGE: CARTOGRAPHY / HEATMAP ─────────────────────────────── -->
+    <div id="page-heatmap" class="page">
+        <div class="heatmap-page-container">
+            <div class="page-watermark">CARTOGRAPHY</div>
+            <div class="page-header">
+                <h1 class="page-title">CARTOGRAPHY</h1>
+                <p class="page-sub mono">TEMPORAL ACTIVITY ACROSS HISTORICAL EPOCHS</p>
+            </div>
+            <div class="heatmap-page-inner">
+                <div class="era-pills-dark" id="era-filters">
+                    <!-- Pills Populated by JS -->
+                </div>
+                <div class="heatmap-canvas-container">
+                    <canvas id="heatmap-canvas-full" class="heatmap-canvas-dark-full"></canvas>
+                </div>
+                <div class="heatmap-stats-row">
+                    <div class="map-stat mono" id="heatmap-total">TOTAL VIEWINGS: 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── PAGE: ARCHIVE (Saved) ───────────────────────────────────── -->
+    <div id="page-saved" class="page">
+        <div class="archive-page-container">
+            <div class="page-watermark">ARCHIVE</div>
+            <div class="page-header">
+                <h1 class="page-title">ARCHIVE</h1>
+                <p class="page-sub mono">CRYSTALLIZED MOMENTS FROM THE TIMELINE</p>
+            </div>
+            <div class="archive-grid" id="saved-grid">
+                <!-- Cards Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── API OVERLAY ───────────────────────────────────────────────── -->
+    <div id="api-overlay" onclick="if(event.target === this) toggleAPI()">
+        <div id="api-panel">
+            <div class="api-panel-title">
+                <span class="mono">CHRONICLE API INTERFACE</span>
+                <button class="api-close" onclick="toggleAPI()">×</button>
+            </div>
+            <p class="mono" style="margin-bottom:24px; color:var(--muted-dark); font-size:0.8rem;">
+                Ensure <code>node server.js</code> is active. All endpoints connect to the Gemini intelligence engine.
+            </p>
+            <div class="api-test">
+                <span class="api-method get">GET</span>
+                <span class="mono">/api/health</span>
+                <div class="api-desc">Check Gemini engine status.</div>
+            </div>
+            <div class="api-test">
+                <span class="api-method post">POST</span>
+                <span class="mono">/api/chronicle</span>
+                <div class="api-desc">Generate cinematic narration.</div>
+            </div>
+            <div class="api-test">
+                <span class="api-method post">POST</span>
+                <span class="mono">/api/imagine</span>
+                <div class="api-desc">Forge a custom temporal memory.</div>
+            </div>
+            <div class="api-test">
+                <span class="api-method get">GET</span>
+                <span class="mono">/api/heatmap</span>
+                <div class="api-desc">Retrieve temporal cluster data.</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /#app -->
+
+<script src="interactions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
