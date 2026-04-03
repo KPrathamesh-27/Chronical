@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises; // PRO-PRACTICE: Use fs.promises for non-blocking I/O
 const path = require('path');
-const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 
 /**
  * @file server.js
@@ -27,8 +26,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Initialize Gemini Client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'setup_required');
+// Ollama is hosted locally
+const OLLAMA_URL = 'http://127.0.0.1:11434';
 
 // ─── Domain Constants ───────────────────────────────────────────────────────
 
@@ -61,20 +60,33 @@ const handleChronicle = async (req, res, next) => {
     const { prompt, history = [] } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required.' });
 
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
-      const fallback = `The air hangs heavy with the weight of eternity. Dust motes spiral upward through shafts of fading light. The sounds of the world outside fade into a low, resonant hum — the heartbeat of history made audible. Some moments in history must simply be felt.`;
-      return res.json({ text: fallback });
-    }
+    const messages = [
+        { role: 'system', content: SYSTEM_INSTRUCTION },
+        ...history.map(m => ({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: m.content || ''
+        })),
+        { role: 'user', content: prompt }
+    ];
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: SYSTEM_INSTRUCTION });
-    const formattedHistory = history.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
+    const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: 'deepseek-r1:8b',
+            messages: messages,
+            stream: false
+        })
+    });
 
-    const chat = model.startChat({ history: formattedHistory });
-    const result = await chat.sendMessage(prompt);
-    res.json({ text: result.response.text() });
+    if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+    const data = await response.json();
+    
+    // Process deepseek thinking tags
+    let text = data.message.content;
+    text = text.replace(/<think>[\s\S]*?<\/think>\s*/gi, '').trim();
+
+    res.json({ text });
   } catch (err) {
     next(err); // Delegate to Global Error Handler
   }
@@ -89,37 +101,89 @@ const handleImagine = async (req, res, next) => {
     const { concept } = req.body;
     if (!concept) return res.status(400).json({ error: 'Concept is required.' });
 
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
-       return res.json({
-           narration: "The timeline shivers. A cinematic vision attempts to form, but the temporal conduit lacks the required energy (API Key).",
-           imagePrompt: "A highly cinematic, dark-academia style hourglass shattering slowly in mid-air, dramatic volumetric lighting, 8k resolution"
-       });
-    }
-
-    // Force structured JSON formatting for deterministic parsing
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-        generationConfig: {
-            responseMimeType: "application/json",
-            // For older SDK versions, if responseSchema throws an error, we rely on the prompt instructing it to output JSON.
-            // A more robust approach depends on the newest @google/generative-ai. We will encode the demand directly via the text if needed.
-        }
-    });
-
     const structuredPrompt = `
       You are an expert cinematic director and narrator. The user wants to witness the following concept: "${concept}" producing a POV video.
-      You must respond strictly with valid JSON conforming to this structure:
+      You must respond strictly with valid JSON conforming to this structure WITHOUT markdown formatting blocks:
       {
         "narration": "A 1-minute read, highly cinematic, atmospheric POV script matching the concept in third-person present tense. Emphasize physical sensations, sounds, and visceral details.",
         "imagePrompt": "A highly specific text-to-image prompt (max 50 words). Must produce a cinematic, dark-academia or hyper-realistic 8k still representing the core action of the concept. Include lighting descriptors (e.g., dramatic volumetric lighting, ray-traced shadows, hyper-detailed)."
       }
     `;
 
-    const result = await model.generateContent(structuredPrompt);
-    const data = JSON.parse(result.response.text());
+    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: 'deepseek-r1:8b',
+            prompt: structuredPrompt,
+            format: 'json',
+            stream: false
+        })
+    });
     
+    if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+    const result = await response.json();
+    
+    // Strip <think> tags natively 
+    const text = result.response.replace(/<think>[\s\S]*?<\/think>\s*/gi, '').trim();
+    const data = JSON.parse(text);
+
     // Ensure the payload structure is valid
     if (!data.narration || !data.imagePrompt) throw new Error("LLM failed to produce structured data.");
+
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Controller: Handles generating character data on the fly via LLM.
+ */
+const handleGenerateCharacter = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name is required.' });
+
+    const structuredPrompt = `
+      You are an expert cinematic director and historian. Generate an evocative JSON structure for the historical figure: "${name}".
+      You must respond strictly with valid JSON conforming to the following structure WITHOUT markdown blocks:
+      {
+         "id": "camelCaseId",
+         "name": "Full Historical Name",
+         "era": "e.g. Victorian, Ancient Rome",
+         "icon": "A single unicode emoji",
+         "quote": "Famous quote",
+         "lat": "Number (precise GPS latitude of their most famous moment, e.g. 48.85)",
+         "lng": "Number (precise GPS longitude of their most famous moment, e.g. 2.35)",
+         "moments": [
+            { "year": "e.g. 1492", "title": "Pivotal Title", "desc": "Vivid cinematic third-person present tense description" },
+            { "year": "...", "title": "...", "desc": "..." },
+            { "year": "...", "title": "...", "desc": "..." }
+         ]
+      }
+    `;
+
+    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: 'deepseek-r1:8b',
+            prompt: structuredPrompt,
+            format: 'json',
+            stream: false
+        })
+    });
+    
+    if (!response.ok) throw new Error(`Ollama Error: ${response.statusText}`);
+    const result = await response.json();
+    
+    // DeepSeek reasoning tags stripping
+    const text = result.response.replace(/<think>[\s\S]*?<\/think>\s*/gi, '').trim();
+    const data = JSON.parse(text);
+    
+    // Add procedural image generated URL
+    data.img = `https://image.pollinations.ai/prompt/${encodeURIComponent(data.name + " cinematic historical portrait dark academia ultra intricate 8k")}?width=400&height=500&nologo=true`;
 
     res.json(data);
   } catch (err) {
@@ -161,6 +225,7 @@ const handlePostHeatmap = async (req, res, next) => {
 
 app.post('/api/chronicle', handleChronicle);
 app.post('/api/imagine', handleImagine); // NEW Imagine feature route
+app.post('/api/character', handleGenerateCharacter); // Infinite LLM generated characters
 app.get('/api/heatmap', handleGetHeatmap);
 app.post('/api/heatmap', handlePostHeatmap);
 
@@ -183,13 +248,15 @@ app.use((err, req, res, next) => {
   console.error('[Engine Fault]', err.message);
   
   let friendlyError = 'The timeline is fractured. The chronicle cannot be retrieved.';
-  if (err.status === 429 || err.message.includes('429') || err.message.includes('Quota exceeded')) {
-      friendlyError = 'ECHO Intelligence Grid overloaded (Gemini Free Tier Quota Exceeded). Please wait ~30 seconds for sensors to cool down.';
+  
+  if (err.message.includes('fetch') || err.message.includes('ECONNREFUSED')) {
+      friendlyError = 'DeepSeek core offline. Ensure Ollama is running locally on port 11434.';
+  } else if (err.message.includes('JSON')) {
+      friendlyError = 'Temporal synthesis failed to structure memory. Try again.';
   }
   
   res.status(err.status || 500).json({
     error: friendlyError,
-    // Omitting full stack trace for security
   });
 });
 

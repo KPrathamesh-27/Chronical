@@ -8,6 +8,84 @@
 const API = '';
 
 /* ─────────────────────────────────────────────────────────────
+   Audio Engine (Web Audio API)
+   ───────────────────────────────────────────────────────────── */
+class AudioEngine {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.droneOsc = null;
+        this.droneGain = null;
+        this.droneFilter = null;
+        this.isPlayingDrone = false;
+        this.unlocked = false;
+        
+        const unlock = () => {
+            if(!this.unlocked) {
+                this.ctx.resume().then(() => { this.unlocked = true; });
+                document.removeEventListener('click', unlock);
+            }
+        };
+        document.addEventListener('click', unlock);
+    }
+
+    startDrone() {
+        if (!this.unlocked || this.isPlayingDrone) return;
+        this.isPlayingDrone = true;
+        
+        this.droneGain = this.ctx.createGain();
+        this.droneGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.droneGain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 4);
+        this.droneGain.connect(this.ctx.destination);
+
+        this.droneFilter = this.ctx.createBiquadFilter();
+        this.droneFilter.type = 'lowpass';
+        this.droneFilter.frequency.value = 150;
+        this.droneFilter.connect(this.droneGain);
+
+        this.droneOsc = this.ctx.createOscillator();
+        this.droneOsc.type = 'sine';
+        this.droneOsc.frequency.value = 55;
+        
+        const lfo = this.ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 0.15;
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.value = 10;
+        lfo.connect(lfoGain);
+        lfoGain.connect(this.droneOsc.frequency);
+        lfo.start();
+
+        this.droneOsc.connect(this.droneFilter);
+        this.droneOsc.start();
+    }
+
+    playTypewriterTick() {
+        if (!this.unlocked) return;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        const f = this.ctx.createBiquadFilter();
+
+        o.type = 'square';
+        o.frequency.setValueAtTime(400 + Math.random() * 200, this.ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.04);
+
+        f.type = 'highpass';
+        f.frequency.value = 1000;
+
+        g.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+
+        o.connect(f);
+        f.connect(g);
+        g.connect(this.ctx.destination);
+
+        o.start();
+        o.stop(this.ctx.currentTime + 0.04);
+    }
+}
+const audioEngine = new AudioEngine();
+
+/* ─────────────────────────────────────────────────────────────
    ECHO Application Class
    ───────────────────────────────────────────────────────────── */
 class EchoApp {
@@ -30,83 +108,7 @@ class EchoApp {
         };
 
         /* Historical Figures Data */
-        this.figures = [
-            {
-                id: 'cleopatra', name: 'Cleopatra VII', era: 'Ancient Egypt', icon: '𓂀',
-                img: 'assets/cleopatra.png',
-                quote: '"She is more than a queen. She is Egypt itself."',
-                moments: [
-                    { year: '51 BCE', title: 'Ascension to the Throne', desc: 'At 18, Cleopatra becomes pharaoh. The priests bow. The Nile flows full.' },
-                    { year: '48 BCE', title: 'The Meeting with Caesar', desc: 'Rolled inside a carpet, revealed to the most powerful man on Earth.' },
-                    { year: '30 BCE', title: 'The Last Morning', desc: 'Alexandria has fallen. The asp waits, coiled among figs. Her final choice.' }
-                ]
-            },
-            {
-                id: 'achilles', name: 'Achilles', era: 'Ancient Greece', icon: '⚔',
-                img: 'assets/achilles.png',
-                quote: '"I carry two sorts of destiny toward the day of my death."',
-                moments: [
-                    { year: '~1194 BCE', title: 'Wrath Begins', desc: 'Agamemnon takes Briseis. Achilles withdraws from battle, and Troy breathes again.' },
-                    { year: '~1194 BCE', title: 'Patroclus Falls', desc: 'Hector slays Patroclus wearing Achilles\'s armor. The sea echoes his grief.' },
-                    { year: '~1194 BCE', title: 'The Arrow\'s Arc', desc: 'Paris, guided by Apollo, looses the arrow that finds Achilles\'s heel.' }
-                ]
-            },
-            {
-                id: 'marie', name: 'Marie Antoinette', era: '18th Century France', icon: '👑',
-                img: 'assets/marie-antoinette.png',
-                quote: '"Let them eat cake."',
-                moments: [
-                    { year: '1770', title: 'Arrival at Versailles', desc: 'A young archduchess enters the most magnificent court in Europe.' },
-                    { year: '1789', title: 'The Women\'s March', desc: 'The crowd surrounds Versailles. The queen steps onto the balcony alone.' },
-                    { year: '1793', title: 'The Conciergerie', desc: 'A cold cell. Her hair is cut. The tumbrel waits outside.' }
-                ]
-            },
-            {
-                id: 'caesar', name: 'Julius Caesar', era: 'Ancient Rome', icon: '🏛',
-                img: 'assets/caesar.png',
-                quote: '"Veni, vidi, vici — I came, I saw, I conquered."',
-                moments: [
-                    { year: '49 BCE', title: 'Crossing the Rubicon', desc: 'Caesar pauses at the river\'s edge, then steps forward. The die is cast.' },
-                    { year: '44 BCE', title: 'The Ides of March', desc: 'Twenty-three senators surround him. Et tu, Brute?' }
-                ]
-            },
-            {
-                id: 'tesla', name: 'Nikola Tesla', era: '19th Century Science', icon: '⚡',
-                img: 'assets/tesla.png',
-                quote: '"The present is theirs; the future, for which I really worked, is mine."',
-                moments: [
-                    { year: '1893', title: 'Chicago World\'s Fair', desc: 'Tesla illuminates the White City with AC. A million bulbs glow. Edison watches.' },
-                    { year: '1899', title: 'Colorado Springs', desc: 'In his laboratory, Tesla conjures artificial lightning 130 feet long.' }
-                ]
-            },
-            {
-                id: 'davinci', name: 'Leonardo da Vinci', era: 'Renaissance', icon: '🎨',
-                img: 'assets/da-vinci.png',
-                quote: '"Learning never exhausts the mind."',
-                moments: [
-                    { year: '1503', title: 'The Mona Lisa', desc: 'He mixes layers of glaze, blending light and shadow into an enigmatic smile.' },
-                    { year: '1482', title: 'The Flying Machine', desc: 'Sketching wings modeled on bats in his Florentine workshop.' }
-                ]
-            },
-            {
-                id: 'joan', name: 'Joan of Arc', era: 'Medieval France', icon: '🛡',
-                img: 'assets/joan-of-arc.png',
-                quote: '"I am not afraid; I was born to do this."',
-                moments: [
-                    { year: '1429', title: 'Siege of Orléans', desc: 'Bearing her white standard, she leads the charge. The English army breaks.' },
-                    { year: '1431', title: 'The Pyre at Rouen', desc: 'Bound to the stake in the old marketplace. She asks for a cross to hold.' }
-                ]
-            },
-            {
-                id: 'alexander', name: 'Alexander the Great', era: 'Ancient Greece', icon: '🦁',
-                img: 'assets/alexander.png',
-                quote: '"There is nothing impossible to him who will try."',
-                moments: [
-                    { year: '333 BCE', title: 'Battle of Issus', desc: 'Charging directly at Darius III, breaking the Persian line and changing the world.' },
-                    { year: '323 BCE', title: 'The Final Fever', desc: 'In Babylon, his generals ask to whom he leaves his empire. "To the strongest," he whispers.' }
-                ]
-            }
-        ];
+        this.figures = [];
 
         this.synth       = window.speechSynthesis;
         this.utterance   = null;
@@ -114,7 +116,7 @@ class EchoApp {
     }
 
     /* ── Init ────────────────────────────────────────────────────── */
-    init() {
+    async init() {
         /* Cache frequently accessed DOM nodes */
         const ids = [
             'app', 'main-nav',
@@ -127,7 +129,7 @@ class EchoApp {
             'narration-text-witness', 'btn-voice-witness', 'btn-save',
             'moment-selector', 'chat-messages', 'chat-input',
             /* Forge page */
-            'narration-text', 'imagine-input', 'btn-imagine', 'forge-actions',
+            'narration-text', 'imagine-input', 'summon-input', 'btn-imagine', 'btn-summon', 'forge-actions',
             /* Heatmap page */
             'heatmap-canvas', 'heatmap-canvas-full', 'era-filters', 'heatmap-total',
             /* Archive page */
@@ -156,6 +158,15 @@ class EchoApp {
 
         /* Fetch heatmap data from server */
         this.fetchHeatmapData();
+
+        /* Load Characters Async */
+        try {
+            const res = await fetch('assets/figures.json');
+            this.figures = await res.json();
+            console.log(`Loaded ${this.figures.length} figures asynchronously.`);
+        } catch(e) {
+            console.error("Failed to load figures.json", e);
+        }
 
         /* Render home chronicles preview */
         this._renderChroniclesPreview();
@@ -231,6 +242,8 @@ class EchoApp {
     goWitness(figId) {
         const fig = this.figures.find(f => f.id === figId);
         if (!fig) return;
+
+        audioEngine.startDrone();
 
         this.state.figure   = fig;
         this.state.momentIdx = 0;
@@ -367,6 +380,43 @@ class EchoApp {
         }
     }
 
+    /* ── Summon New Historical Figure via LLM ────────────────────── */
+    async handleSummon() {
+        const input  = this.el.summonInput;
+        const output = this.el.narrationText;
+        if (!input || !output) return;
+
+        const name = input.value.trim();
+        if (!name) return;
+
+        input.value = '';
+        output.innerHTML = '<span class="mono" style="color:var(--muted-dark)">// EXCAVATING HISTORICAL RECORD...</span>';
+        if (this.el.forgeActions) this.el.forgeActions.style.display = 'none';
+        
+        try {
+            const r = await fetch(`${API}/api/character`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || 'Summon error');
+
+            this.figures.unshift(data);
+            this._renderChroniclesFull();
+            this._renderChroniclesPreview();
+
+            output.innerHTML = '';
+            const msg = `ENTITY ACQUIRED: ${data.name}.\nEra: ${data.era}\nAnalysis Complete. Witness available in Chronicles.`;
+            this._typewriter(output, msg, () => {
+                setTimeout(() => this.goWitness(data.id), 2000);
+            });
+
+        } catch (e) {
+            output.innerHTML = `<span class="mono" style="color:#C0392B;">// ${e.message}</span>`;
+        }
+    }
+
     /* ── AI Chat ─────────────────────────────────────────────────── */
     async sendChat() {
         const input   = this.el.chatInput;
@@ -419,6 +469,7 @@ class EchoApp {
 
             const para = paras[pi];
             if (ci < para.length) {
+                audioEngine.playTypewriterTick();
                 pEl.innerHTML = para.slice(0, ci + 1) + '<span class="typewriter-cursor"></span>';
                 ci++;
                 setTimeout(tick, 18);
@@ -523,13 +574,11 @@ class EchoApp {
         `).join('');
     }
 
-    /* ── Heatmap (Home) ─────────────────────────────────────────── */
+    /* ── Heatmap (Home Preview) ─────────────────────────────────────────── */
     _renderHeatmapHome() {
-        const canvas = this.el.heatmapCanvas;
-        if (!canvas) return;
-        canvas.width  = canvas.parentElement.offsetWidth;
-        canvas.height = 200;
-        this._drawHeatmapOnCanvas(canvas);
+        if (!document.getElementById('globe-container-home')) return;
+        if (!this._globeHome) this._initWebGLGlobe('globe-container-home', true);
+        else this._updateWebGLMarkers(true);
     }
 
     /* ── Heatmap (Full Page) ────────────────────────────────────── */
@@ -544,12 +593,12 @@ class EchoApp {
             `).join('');
         }
 
-        const canvas = this.el.heatmapCanvasFull;
-        if (!canvas) return;
+        if (!document.getElementById('globe-container-full')) return;
+        
+        // Use timeout to ensure DOM layout is painted before getting dimensions
         setTimeout(() => {
-            canvas.width  = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-            this._drawHeatmapOnCanvas(canvas);
+            if (!this._globeFull) this._initWebGLGlobe('globe-container-full', false);
+            else this._updateWebGLMarkers(false);
         }, 60);
     }
 
@@ -558,94 +607,214 @@ class EchoApp {
         document.querySelectorAll('.era-pill-dark').forEach(p => {
             p.classList.toggle('active', p.textContent === era);
         });
-        const canvas = this.el.heatmapCanvasFull;
-        if (canvas) this._drawHeatmapOnCanvas(canvas);
+        if (this._globeFull) this._updateWebGLMarkers(false);
     }
 
-    _drawHeatmapOnCanvas(canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    /* ── WebGL 3D Globe Implementation ────────────────────────────── */
+    _initWebGLGlobe(containerId, isPreview) {
+        if (!window.THREE) return; // Ensure Three.js loaded
+        
+        const container = document.getElementById(containerId);
+        if (!container || container.dataset.initialized) return;
+        
+        container.dataset.initialized = "true";
+        container.innerHTML = ""; 
+        
+        let width = container.offsetWidth || 500;
+        let height = container.offsetHeight || 500;
+        
+        const scene = new THREE.Scene();
+        // Transparent background so it blends with our dark theme CSS
+        
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = isPreview ? 35 : 28;
 
-        /* World Map Background */
-        if (!this._worldMapImg) {
-            this._worldMapImg = new Image();
-            this._worldMapImg.src = 'assets/world.svg';
-            this._worldMapImg.onload = () => this._drawHeatmapOnCanvas(canvas);
-        }
-        if (this._worldMapImg.complete) {
-            const mw = canvas.width * 0.85;
-            const mh = (mw / 1008) * 650; // SVG aspect ratio is 1008x650
-            const mx = (canvas.width - mw) / 2;
-            const my = (canvas.height - mh) / 2;
-            ctx.globalAlpha = 0.3; // faint elegant map
-            ctx.drawImage(this._worldMapImg, mx, my, mw, mh);
-            ctx.globalAlpha = 1.0;
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 1);
+        container.appendChild(renderer.domElement);
+
+        let controls;
+        if (window.THREE.OrbitControls) {
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;
+            if (isPreview) {
+                controls.enableZoom = false;
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 1.0;
+            } else {
+                controls.minDistance = 15;
+                controls.maxDistance = 60;
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 0.5;
+            }
         }
 
-        /* Starfield background */
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        for (let i = 0; i < 120; i++) {
-            ctx.beginPath();
-            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 1.5, 0, Math.PI * 2);
-            ctx.fill();
+        const globeGroup = new THREE.Group();
+        scene.add(globeGroup);
+
+        const radius = 10;
+        const sphereGeo = new THREE.SphereGeometry(radius, 64, 64);
+        
+        const textureLoader = new THREE.TextureLoader();
+        const earthTexture = textureLoader.load('assets/earth-dark.svg');
+        
+        // Base dark sphere
+        const baseMat = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            map: earthTexture,
+            emissive: 0x0a0e27,
+            emissiveIntensity: 0.1,
+            transparent: true,
+            opacity: 0.95
+        });
+        const globeMesh = new THREE.Mesh(sphereGeo, baseMat);
+        
+        // Align standard SphereGeometry UVs to Cartesian math projection
+        globeMesh.rotation.y = -Math.PI / 2;
+        
+        globeGroup.add(globeMesh);
+
+        // Wireframe overlay
+        const wireMat = new THREE.MeshBasicMaterial({
+            color: 0x4a5568,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const wireMesh = new THREE.Mesh(sphereGeo, wireMat);
+        globeGroup.add(wireMesh);
+
+        // Atmosphere glow
+        const atmosGeo = new THREE.SphereGeometry(radius * 1.05, 32, 32);
+        const atmosMat = new THREE.MeshBasicMaterial({
+            color: 0x3182ce,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.BackSide,
+            blending: THREE.AdditiveBlending
+        });
+        const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
+        globeGroup.add(atmosMesh);
+
+        // Stars
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = isPreview ? 200 : 800;
+        const posArray = new Float32Array(starsCount * 3);
+        const colorsArray = new Float32Array(starsCount * 3);
+        for(let i=0; i < starsCount * 3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 200;
+            posArray[i+1] = (Math.random() - 0.5) * 200;
+            posArray[i+2] = -Math.random() * 200; // Keep mostly behind
+            
+            const intensity = Math.random();
+            colorsArray[i] = intensity;
+            colorsArray[i+1] = intensity;
+            colorsArray[i+2] = intensity;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        starsGeo.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.3, vertexColors: true, transparent: true, opacity: 0.8 });
+        const starsMesh = new THREE.Points(starsGeo, starsMat);
+        scene.add(starsMesh);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        directionalLight.position.set(20, 10, 20);
+        scene.add(directionalLight);
+
+        if (isPreview) {
+            this._globeHome = { scene, globeGroup, renderer, camera, markers: [], radius };
+        } else {
+            this._globeFull = { scene, globeGroup, renderer, camera, markers: [], radius };
         }
 
-        const data     = this.state.heatmapData;
-        let maxCount   = 1, total = 0;
+        const animate = () => {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            else globeGroup.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        };
+        animate();
+
+        window.addEventListener('resize', () => {
+            if(!container || !container.parentElement) return;
+            width = container.offsetWidth || 500;
+            height = container.offsetHeight || 500;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        });
+        
+        this._updateWebGLMarkers(isPreview);
+    }
+
+    _updateWebGLMarkers(isPreview) {
+        const globeState = isPreview ? this._globeHome : this._globeFull;
+        if (!globeState) return;
+
+        const { globeGroup, markers, radius } = globeState;
+
+        markers.forEach(m => globeGroup.remove(m));
+        markers.length = 0;
+
+        const data = this.state.heatmapData;
+        let maxCount = 1, total = 0;
         Object.values(data).forEach(v => { if (v > maxCount) maxCount = v; total += v; });
 
-        /* Build nodes */
-        const nodes = [];
         Object.keys(data).forEach(era => {
-            if (this.state.hmActiveEra !== 'All Time' && era !== this.state.hmActiveEra) return;
-            const count     = data[era];
+            if (!isPreview && this.state.hmActiveEra !== 'All Time' && era !== this.state.hmActiveEra) return;
+            
+            const count = data[era];
             const intensity = count / maxCount;
-            const hash      = era.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-            const x         = Math.abs(hash % (canvas.width  * 0.8)) + canvas.width  * 0.1;
-            const y         = Math.abs((hash >> 4) % (canvas.height * 0.8)) + canvas.height * 0.1;
-            nodes.push({ x, y, radius: 4 + intensity * 14, label: era, count });
-        });
+            const figure = this.figures.find(f => f.era === era);
+            
+            if (figure && figure.lat !== undefined && figure.lng !== undefined) {
+                const lat = Number(figure.lat);
+                const lng = Number(figure.lng);
+                
+                const phi = (90 - lat) * (Math.PI / 180);
+                const theta = (lng + 180) * (Math.PI / 180);
 
-        /* Connection lines */
-        if (nodes.length > 1) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-            ctx.lineWidth   = 1;
-            ctx.beginPath();
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    if (Math.random() > 0.4) {
-                        ctx.moveTo(nodes[i].x, nodes[i].y);
-                        ctx.lineTo(nodes[j].x, nodes[j].y);
-                    }
-                }
+                const x = -(radius * Math.sin(phi) * Math.cos(theta));
+                const z = (radius * Math.sin(phi) * Math.sin(theta));
+                const y = (radius * Math.cos(phi));
+
+                // Heatmap Red-Orange-Yellow gradient simulation
+                let colorHex = 0xffa500; // Default orange/yellow
+                if (intensity > 0.8) colorHex = 0xff0000;
+                else if (intensity > 0.4) colorHex = 0xff4500;
+                
+                // Solid core
+                const markerGeo = new THREE.SphereGeometry(0.2 + (intensity * 0.3), 16, 16);
+                const markerMat = new THREE.MeshBasicMaterial({ color: colorHex });
+                const markerMesh = new THREE.Mesh(markerGeo, markerMat);
+                markerMesh.position.set(x, y, z);
+                
+                // Glow Halo
+                const haloGeo = new THREE.SphereGeometry(0.4 + (intensity * 0.8), 32, 32);
+                const haloMat = new THREE.MeshBasicMaterial({
+                    color: colorHex,
+                    transparent: true,
+                    opacity: 0.3,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.BackSide
+                });
+                const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+                haloMesh.position.set(x, y, z);
+                
+                globeGroup.add(markerMesh);
+                globeGroup.add(haloMesh);
+                markers.push(markerMesh, haloMesh);
             }
-            ctx.stroke();
-        }
-
-        /* Glow nodes */
-        nodes.forEach(n => {
-            const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.radius * 3);
-            g.addColorStop(0, 'rgba(255,255,255,0.35)');
-            g.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, n.radius * 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, n.radius * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle   = 'rgba(255,255,255,0.55)';
-            ctx.font        = '9px Space Mono';
-            ctx.textAlign   = 'center';
-            ctx.fillText(n.label, n.x, n.y + n.radius + 14);
         });
 
-        /* Update counter */
-        const countEl = this.el.heatmapTotal;
-        if (countEl) countEl.textContent = `TOTAL VIEWINGS: ${total}`;
+        const countEl = document.getElementById('heatmap-total');
+        if (countEl && !isPreview) countEl.textContent = `TOTAL VIEWINGS: ${total}`;
     }
 
     async fetchHeatmapData() {

@@ -18,8 +18,12 @@
     --muted-dark:   #555555;
     --muted-mid:    #888888;
     --gold:         #B8954A;
+    --gold-light:   #D4AB6A;
     --gold-dim:     #8A6E38;
     --accent-red:   #C0392B;
+    --violet:       #7C3AED;
+    --violet-dim:   rgba(124, 58, 237, 0.15);
+    --indigo:       #4338CA;
 
     --font-sans:  'Space Grotesk', 'Inter', sans-serif;
     --font-mono:  'Space Mono', monospace;
@@ -2046,3 +2050,621 @@ body:has(a:hover) #echo-cursor { width: 56px; height: 56px; }
    CHRONICLE CARD STAGGER (updated for animation approach)
    ═══════════════════════════════════════════════════════════ */
 /* (entry animation defined above in temporalEntry) */
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBE TOOLTIP
+   ═══════════════════════════════════════════════════════════ */
+.globe-tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    background: rgba(10, 14, 30, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 16px;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(15px, 15px); /* Offset from cursor */
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.1s linear;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.globe-tooltip:not(.hidden) {
+    opacity: 1;
+}
+.globe-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+.tooltip-country {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-light);
+    text-transform: uppercase;
+}
+.tooltip-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.01em;
+}
+.tooltip-role {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--muted-mid);
+    margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NEXUS FORGE V2 — Glassmorphism AI Chat Style
+   ═══════════════════════════════════════════════════════════ */
+.forge-v2 {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Ambient blobs */
+.forge-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    animation: blobPulse 7s ease-in-out infinite;
+}
+.forge-blob-1 {
+    width: 500px; height: 500px;
+    top: -100px; left: 15%;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+    animation-delay: 0s;
+}
+.forge-blob-2 {
+    width: 450px; height: 450px;
+    bottom: 0; right: 10%;
+    background: radial-gradient(circle, rgba(67,56,202,0.12) 0%, transparent 70%);
+    animation-delay: -2.5s;
+}
+.forge-blob-3 {
+    width: 350px; height: 350px;
+    top: 40%; left: 55%;
+    background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
+    animation-delay: -5s;
+}
+@keyframes blobPulse {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.7; }
+    33%       { transform: scale(1.15) translate(20px, -20px); opacity: 1; }
+    66%       { transform: scale(0.9) translate(-20px, 10px); opacity: 0.5; }
+}
+
+.forge-v2-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 680px;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* Header */
+.forge-v2-header {
+    text-align: center;
+    animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+}
+.forge-v2-eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted-dark);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+.forge-v2-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.35) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+}
+.forge-v2-title-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    margin: 10px auto;
+    width: 0;
+    animation: lineExpand 0.9s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
+}
+@keyframes lineExpand { to { width: 100%; } }
+.forge-v2-sub {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 8px;
+}
+
+/* Mode tabs */
+.forge-mode-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+}
+.forge-mode-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 7px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--muted-mid);
+    background: none;
+    border: none;
+    transition: all 0.25s ease;
+}
+.forge-mode-tab.active {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+.forge-mode-tab:hover:not(.active) {
+    color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.04);
+}
+
+/* Main glass box */
+.forge-glass-box {
+    position: relative;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: visible;
+    animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s both;
+    transition: border-color 0.3s ease;
+}
+.forge-glass-box:focus-within {
+    border-color: rgba(124,58,237,0.4);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Command palette dropdown */
+.forge-cmd-palette {
+    position: absolute;
+    left: 12px; right: 12px;
+    bottom: calc(100% + 8px);
+    background: rgba(10,10,12,0.97);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 200;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    display: none;
+    animation: dropUp 0.15s ease;
+}
+.forge-cmd-palette.open { display: block; }
+@keyframes dropUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.forge-cmd-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.forge-cmd-item:hover { background: rgba(255,255,255,0.06); }
+.forge-cmd-icon {
+    font-size: 1rem;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.forge-cmd-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+.forge-cmd-desc {
+    font-size: 0.65rem;
+    color: var(--muted-mid);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+}
+
+/* Textarea */
+.forge-textarea-wrap { padding: 16px 16px 0; }
+.forge-textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    color: rgba(255,255,255,0.88);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    min-height: 72px;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.forge-textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+/* Bottom bar */
+.forge-glass-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 8px;
+    gap: 8px;
+}
+.forge-glass-actions { display: flex; gap: 4px; }
+.forge-icon-btn {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    background: none;
+    color: rgba(255,255,255,0.35);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.forge-icon-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.8);
+}
+.forge-cmd-toggle.active {
+    background: rgba(124,58,237,0.15);
+    color: #a78bfa;
+}
+.forge-send-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--white);
+    color: #0A0A0A;
+}
+.forge-send-btn:hover {
+    background: var(--off-white);
+    box-shadow: 0 6px 20px rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+.forge-send-btn:active { transform: scale(0.97); }
+.forge-send-btn:disabled {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.3);
+    box-shadow: none;
+    transform: none;
+    cursor: default;
+}
+
+/* Attachments */
+.forge-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 14px 12px;
+    empty-cells: hide;
+}
+.forge-attachment-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: rgba(255,255,255,0.6);
+}
+.forge-attachment-tag button {
+    background: none; border: none; color: rgba(255,255,255,0.4);
+    line-height: 1; padding: 0; font-size: 0.9rem;
+    transition: color 0.15s;
+}
+.forge-attachment-tag button:hover { color: var(--white); }
+
+/* Quick chips */
+.forge-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s both;
+}
+.forge-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 50px;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.55);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.forge-chip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(67,56,202,0.1));
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+.forge-chip:hover {
+    color: rgba(255,255,255,0.9);
+    border-color: rgba(124,58,237,0.4);
+    transform: translateY(-2px);
+}
+.forge-chip:hover::before { opacity: 1; }
+
+/* V2 output box */
+.forge-output-v2 {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    min-height: 80px;
+    animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+}
+
+/* Thinking indicator */
+.forge-thinking {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 50px;
+    width: fit-content;
+    margin: 0 auto;
+}
+.forge-thinking-avatar {
+    width: 32px; height: 28px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 0.1em;
+    padding: 0 6px;
+}
+.forge-thinking-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+}
+.forge-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.forge-dots span {
+    width: 5px; height: 5px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    animation: dotBounce 1.2s ease-in-out infinite;
+}
+.forge-dots span:nth-child(2) { animation-delay: 0.15s; }
+.forge-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dotBounce {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+    40% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WITNESS V2 — Narration Box & Image Card
+   ═══════════════════════════════════════════════════════════ */
+.witness-card {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--surface);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.witness-card-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(ellipse, rgba(184,149,74,0.12) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    animation: glowPulse 4s ease-in-out infinite;
+}
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+.witness-card .witness-figure-img-wrap {
+    position: relative;
+    z-index: 1;
+}
+.witness-card-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 4px 10px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+    z-index: 2;
+}
+
+/* Narration glass box */
+.witness-narration-box {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.witness-narration-box-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: var(--muted-dark);
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.015);
+}
+.witness-narration-pulse {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    animation: pulseLive 2s ease-in-out infinite;
+    box-shadow: 0 0 6px rgba(34,197,94,0.5);
+}
+@keyframes pulseLive {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.8); }
+}
+.witness-narration-box .witness-narration {
+    padding: 16px;
+}
+
+/* Chat box border upgrade */
+.witness-chat-box {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.witness-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.01);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBE PANEL — Controls & Legend
+   ═══════════════════════════════════════════════════════════ */
+.globe-panel {
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.01);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+/* Controls overlay (top-right corner) */
+.globe-controls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(10,10,14,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 6px;
+    backdrop-filter: blur(12px);
+}
+.globe-ctrl-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 7px;
+    color: rgba(255,255,255,0.45);
+    transition: all 0.2s ease;
+}
+.globe-ctrl-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+}
+.globe-ctrl-btn.active {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+.globe-ctrl-sep {
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+    margin: 2px 0;
+}
+
+/* Footer bar */
+.globe-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.01);
+}
+.globe-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    color: var(--muted-dark);
+}
+.legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+}
+

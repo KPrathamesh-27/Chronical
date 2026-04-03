@@ -1,0 +1,101 @@
+[
+  {
+      "id": "cleopatra", "name": "Cleopatra VII", "era": "Ancient Egypt", "icon": "𓂀",
+      "img": "assets/cleopatra.png",
+      "lat": 31.2, "lng": 29.9,
+      "country": "Egypt",
+      "role": "The last active ruler of the Ptolemaic Kingdom, whose political ingenuity shaped the fate of Egypt and Rome.",
+      "quote": "\"She is more than a queen. She is Egypt itself.\"",
+      "moments": [
+          { "year": "51 BCE", "title": "Ascension to the Throne", "desc": "At 18, Cleopatra becomes pharaoh. The priests bow. The Nile flows full." },
+          { "year": "48 BCE", "title": "The Meeting with Caesar", "desc": "Rolled inside a carpet, revealed to the most powerful man on Earth." },
+          { "year": "30 BCE", "title": "The Last Morning", "desc": "Alexandria has fallen. The asp waits, coiled among figs. Her final choice." }
+      ]
+  },
+  {
+      "id": "achilles", "name": "Achilles", "era": "Ancient Greece", "icon": "⚔",
+      "img": "assets/achilles.png",
+      "lat": 39.9, "lng": 26.2,
+      "country": "Troy (Modern Turkey)",
+      "role": "A mythical Greek hero of the Trojan War, known for his unmatched prowess in combat and a fateful vulnerability.",
+      "quote": "\"I carry two sorts of destiny toward the day of my death.\"",
+      "moments": [
+          { "year": "~1194 BCE", "title": "Wrath Begins", "desc": "Agamemnon takes Briseis. Achilles withdraws from battle, and Troy breathes again." },
+          { "year": "~1194 BCE", "title": "Patroclus Falls", "desc": "Hector slays Patroclus wearing Achilles's armor. The sea echoes his grief." },
+          { "year": "~1194 BCE", "title": "The Arrow's Arc", "desc": "Paris, guided by Apollo, looses the arrow that finds Achilles's heel." }
+      ]
+  },
+  {
+      "id": "marie", "name": "Marie Antoinette", "era": "18th Century France", "icon": "👑",
+      "img": "assets/marie-antoinette.png",
+      "lat": 48.8, "lng": 2.1,
+      "country": "France",
+      "role": "The last Queen of France before the French Revolution, symbolizing the lavish excesses of the Bourbon monarchy.",
+      "quote": "\"Let them eat cake.\"",
+      "moments": [
+          { "year": "1770", "title": "Arrival at Versailles", "desc": "A young archduchess enters the most magnificent court in Europe." },
+          { "year": "1789", "title": "The Women's March", "desc": "The crowd surrounds Versailles. The queen steps onto the balcony alone." },
+          { "year": "1793", "title": "The Conciergerie", "desc": "A cold cell. Her hair is cut. The tumbrel waits outside." }
+      ]
+  },
+  {
+      "id": "caesar", "name": "Julius Caesar", "era": "Ancient Rome", "icon": "🏛",
+      "img": "assets/caesar.png",
+      "lat": 41.9, "lng": 12.5,
+      "country": "Roman Republic (Italy)",
+      "role": "A brilliant Roman general and statesman whose rise to absolute power led to the demise of the Republic.",
+      "quote": "\"Veni, vidi, vici — I came, I saw, I conquered.\"",
+      "moments": [
+          { "year": "49 BCE", "title": "Crossing the Rubicon", "desc": "Caesar pauses at the river's edge, then steps forward. The die is cast." },
+          { "year": "44 BCE", "title": "The Ides of March", "desc": "Twenty-three senators surround him. Et tu, Brute?" }
+      ]
+  },
+  {
+      "id": "tesla", "name": "Nikola Tesla", "era": "19th Century Science", "icon": "⚡",
+      "img": "assets/tesla.png",
+      "lat": 38.8, "lng": -104.8,
+      "country": "United States",
+      "role": "A visionary electrical engineer who conducted groundbreaking experiments in alternating current and wireless energy.",
+      "quote": "\"The present is theirs; the future, for which I really worked, is mine.\"",
+      "moments": [
+          { "year": "1893", "title": "Chicago World's Fair", "desc": "Tesla illuminates the White City with AC. A million bulbs glow. Edison watches." },
+          { "year": "1899", "title": "Colorado Springs", "desc": "In his laboratory, Tesla conjures artificial lightning 130 feet long." }
+      ]
+  },
+  {
+      "id": "davinci", "name": "Leonardo da Vinci", "era": "Renaissance", "icon": "🎨",
+      "img": "assets/da-vinci.png",
+      "lat": 43.7, "lng": 11.2,
+      "country": "Italy",
+      "role": "The quintessential polymath of the High Renaissance, pioneering techniques in painting, anatomy, and conceptual engineering.",
+      "quote": "\"Learning never exhausts the mind.\"",
+      "moments": [
+          { "year": "1503", "title": "The Mona Lisa", "desc": "He mixes layers of glaze, blending light and shadow into an enigmatic smile." },
+          { "year": "1482", "title": "The Flying Machine", "desc": "Sketching wings modeled on bats in his Florentine workshop." }
+      ]
+  },
+  {
+      "id": "joan", "name": "Joan of Arc", "era": "Medieval France", "icon": "🛡",
+      "img": "assets/joan-of-arc.png",
+      "lat": 49.4, "lng": 1.0,
+      "country": "France",
+      "role": "A young peasant girl who, guided by divine visions, miraculously led French forces during the Hundred Years' War.",
+      "quote": "\"I am not afraid; I was born to do this.\"",
+      "moments": [
+          { "year": "1429", "title": "Siege of Orléans", "desc": "Bearing her white standard, she leads the charge. The English army breaks." },
+          { "year": "1431", "title": "The Pyre at Rouen", "desc": "Bound to the stake in the old marketplace. She asks for a cross to hold." }
+      ]
+  },
+  {
+      "id": "alexander", "name": "Alexander the Great", "era": "Ancient Greece", "icon": "🦁",
+      "img": "assets/alexander.png",
+      "lat": 32.5, "lng": 44.4,
+      "country": "Babylon (Modern Iraq)",
+      "role": "The ambitious King of Macedon whose continuous military campaign forged one of history's largest empires.",
+      "quote": "\"There is nothing impossible to him who will try.\"",
+      "moments": [
+          { "year": "333 BCE", "title": "Battle of Issus", "desc": "Charging directly at Darius III, breaking the Persian line and changing the world." },
+          { "year": "323 BCE", "title": "The Final Fever", "desc": "In Babylon, his generals ask to whom he leaves his empire. 'To the strongest,' he whispers." }
+      ]
+  }
+]
