@@ -79,23 +79,24 @@
         /* -- 3D ring definitions (normal vectors define tilt plane) --
            Each ring: a & b are the semi-axis lengths, nx/ny tilt the ellipse, speed = orbital speed */
         const rings = [
-            { a: 166, b: 58,  tilt: 0.35,  rotOff: 0,      speed:  0.0012, color: [210, 185, 130], sphereR: 5, phase: 0    },
-            { a: 138, b: 48,  tilt: 1.05,  rotOff: 1.2,    speed: -0.0018, color: [180, 155, 100], sphereR: 4, phase: 2.1  },
-            { a: 108, b: 36,  tilt: -0.7,  rotOff: 2.4,    speed:  0.0025, color: [150, 120,  80], sphereR: 3, phase: 4.4  },
+            { a: 190, b: 62,  tilt: 0.35,  rotOff: 0,      speed:  0.0012, color: [210, 185, 130], sphereR: 5.5, phase: 0    },
+            { a: 154, b: 54,  tilt: 1.05,  rotOff: 1.2,    speed: -0.0018, color: [180, 155, 100], sphereR: 4.5, phase: 2.1  },
+            { a: 122, b: 44,  tilt: -0.7,  rotOff: 2.4,    speed:  0.0025, color: [150, 120,  80], sphereR: 3.5, phase: 4.4  },
+            { a: 95,  b: 32,  tilt: 0.15,  rotOff: 3.6,    speed: -0.0032, color: [120, 100,  60], sphereR: 2.5, phase: 1.0  }
         ];
 
         /* -- Particle field drifting around the artifact -- */
-        const particles = Array.from({ length: 150 }, () => ({
+        const particles = Array.from({ length: 180 }, () => ({
             angle:   Math.random() * Math.PI * 2,
-            dist:    Math.random() * 210 + 20,
-            flattenY: Math.random() * 0.4 + 0.15,  // how flat the orbit is
-            speed:   (Math.random() - 0.5) * 0.004,
-            size:    Math.random() * 1.4 + 0.3,
-            opacity: Math.random() * 0.35 + 0.04,
+            dist:    Math.random() * 230 + 20,
+            flattenY: Math.random() * 0.45 + 0.12,  // how flat the orbit is
+            speed:   (Math.random() - 0.5) * 0.0045,
+            size:    Math.random() * 1.6 + 0.3,
+            opacity: Math.random() * 0.4 + 0.04,
         }));
 
         /* -- Ancient symbol positions on outer ring -- */
-        const SYMBOLS = ['𓂀', '𓆣', '⊕', '∞', '☽', '✦', 'Ω', 'Δ'];
+        const SYMBOLS = ['𓂀', '𓆣', '⊕', '∞', '☽', '✦', 'Ω', 'Δ', '☥', '𓋹'];
 
         let time = 0;
 
@@ -115,8 +116,8 @@
             ctx.beginPath();
             ctx.ellipse(0, 0, ring.a, ring.a, 0, 0, Math.PI * 2);
             ctx.setLineDash([4, 10]);
-            ctx.strokeStyle = `rgba(${r},${g},${b},0.4)`;
-            ctx.lineWidth   = 0.9;
+            ctx.strokeStyle = `rgba(${r},${g},${b},0.45)`;
+            ctx.lineWidth   = 1.1;
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -126,19 +127,19 @@
             const sy = Math.sin(sphereAngle) * ring.a;
 
             // Sphere glow
-            const sg = ctx.createRadialGradient(sx - 1.5, sy - 1.5, 0, sx, sy, ring.sphereR * 2.5);
-            sg.addColorStop(0,   `rgba(255,248,230,0.95)`);
-            sg.addColorStop(0.3, `rgba(${r},${g},${b},0.7)`);
+            const sg = ctx.createRadialGradient(sx - 1.5, sy - 1.5, 0, sx, sy, ring.sphereR * 2.8);
+            sg.addColorStop(0,   `rgba(255,252,240,0.98)`);
+            sg.addColorStop(0.3, `rgba(${r},${g},${b},0.8)`);
             sg.addColorStop(1,   'rgba(0,0,0,0)');
             ctx.fillStyle = sg;
             ctx.beginPath();
-            ctx.arc(sx, sy, ring.sphereR * 2.5, 0, Math.PI * 2);
+            ctx.arc(sx, sy, ring.sphereR * 2.8, 0, Math.PI * 2);
             ctx.fill();
 
             // Core sphere dot
             ctx.beginPath();
             ctx.arc(sx, sy, ring.sphereR, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,250,240,0.95)`;
+            ctx.fillStyle = `rgba(255,255,250,0.98)`;
             ctx.fill();
 
             ctx.restore();
@@ -323,7 +324,6 @@
                     <div class="carousel-card-quote">"${f.quote?.replace(/"/g,'').slice(0,60)}..."</div>
                 </div>
                 <div class="carousel-card-bar"></div>
-                <div class="carousel-card-witness mono">WITNESS →</div>
             </div>
         `).join('');
 
@@ -332,13 +332,16 @@
             `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="window.carouselSelect(${i})"></div>`
         ).join('');
 
-        // Wire card clicks — on active card → go to witness; on others → focus
+        // Wire card clicks — on active card → open detail panel; on others → focus
         carouselTrack.addEventListener('click', e => {
             const card = e.target.closest('.carousel-card');
             if (!card) return;
             const idx = parseInt(card.dataset.index);
             if (idx === carouselIndex) {
-                if (window.echoApp) echoApp.goWitness(carouselFigures[idx].id);
+                // Use the live figures list from echoApp to prevent stale selection/ID mismatch
+                const liveFigures = (window.echoApp && echoApp.figures) ? echoApp.figures : carouselFigures;
+                if (window.openDetailPanel) openDetailPanel(liveFigures[idx].id);
+                else if (window.echoApp) echoApp.goWitness(liveFigures[idx].id);
             } else {
                 window.carouselSelect(idx);
             }

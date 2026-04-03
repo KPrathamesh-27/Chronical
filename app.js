@@ -99,8 +99,13 @@ class EchoApp {
             narration: '',
             chatHistory: [],
             // Migrate/clean any stale saved items from previous versions that have undefined fields
+            // Also normalize 'figId' to 'id' for consistency across the platform
             saved: JSON.parse(localStorage.getItem('chrono_archive') || '[]')
-                .filter(s => s.figId && s.title && s.title !== 'undefined' && s.img && s.img !== 'undefined'),
+                .map(s => {
+                    if (s.figId && !s.id) s.id = s.figId; 
+                    return s;
+                })
+                .filter(s => s.id && s.title && s.title !== 'undefined' && s.img && s.img !== 'undefined'),
             narrating: false,
             heatmapData: {},
             hmActiveEra: 'All Time',
@@ -159,13 +164,104 @@ class EchoApp {
         /* Fetch heatmap data from server */
         this.fetchHeatmapData();
 
-        /* Load Characters Async */
+        /* Load Characters & Archive Sync */
         try {
-            const res = await fetch('assets/figures.json');
-            this.figures = await res.json();
-            console.log(`Loaded ${this.figures.length} figures asynchronously.`);
+            const [seedRes, archiveRes] = await Promise.all([
+                fetch('assets/figures.json'),
+                fetch(`${API}/api/archive`).catch(() => null)
+            ]);
+            
+            const staticFigures = await seedRes.json();
+            const archiveFigures = archiveRes ? await archiveRes.json() : [];
+            
+            /* Merge Archive and Seed data with Fuzzy Identity & Local-First Art Pipeline */
+            const HISTORICAL_ALIASES = {
+                'joanofarc': 'jeannedarc',
+                'jeannedarc': 'joanofarc',
+                'gaiusjuliuscaesar': 'juliuscaesar',
+                'cleopatraviiphilopator': 'cleopatravii',
+                'alexanderiiiofmacedon': 'alexanderthegreat',
+                'alexanderthegreat': 'alexanderiiiofmacedon'
+            };
+
+            const LOCAL_ASSETS = {
+                'cleopatravii': 'assets/cleopatra.png',
+                'cleopatraviiphilopator': 'assets/cleopatra.png',
+                'juliuscaesar': 'assets/caesar.png',
+                'gaiusjuliuscaesar': 'assets/caesar.png',
+                'achilles': 'assets/achilles.png',
+                'marieantoinette': 'assets/marie-antoinette.png',
+                'nikolatesla': 'assets/tesla.png',
+                'leonardodavinci': 'assets/da-vinci.png',
+                'jeannedarc': 'assets/joan-of-arc.png',
+                'joanofarc': 'assets/joan-of-arc.png',
+                'alexanderiiiofmacedon': 'assets/alexander.png',
+                'alexanderthegreat': 'assets/alexander.png'
+            };
+
+            const normalizedArchive = archiveFigures.map(af => {
+                 const name = af.name || af.fullName || 'Legacy Figure';
+                 const era = af.era || af.context || 'Unknown Era';
+                 const norm = name.toLowerCase().replace(/[^a-z]/g, '');
+                 
+                 /* Priority: 
+                    1. Existing af.img if it points to assets/
+                    2. Local lookup
+                    3. Placeholder
+                 */
+                 let img = af.img;
+                 // If img is missing, points to pollinations, or is a broken placeholder string
+                 if (!img || img.includes('pollinations.ai') || img === 'assets/placeholder.png') {
+                     // Check if it's one of our known core figures
+                     img = LOCAL_ASSETS[norm] || 'assets/hero-bg.png'; // Using hero-bg as a temporary 'template' placeholder
+                 }
+                 
+                 return {
+                    ...af,
+                    name,
+                    era,
+                    img,
+                    _norm: norm
+                 };
+            });
+            
+            const merged = [...normalizedArchive];
+            staticFigures.forEach(sf => {
+                const sfNorm = (sf.name || '').toLowerCase().replace(/[^a-z]/g, '');
+                
+                let existing = null;
+                const isDuplicate = merged.some(af => {
+                    const isMatch = (af.id === sf.id) || 
+                                    (af.name.toLowerCase() === sf.name.toLowerCase()) ||
+                                    (af._norm === sfNorm) ||
+                                    (HISTORICAL_ALIASES[sfNorm] === af._norm || HISTORICAL_ALIASES[af._norm] === sfNorm) ||
+                                    (af._norm.includes(sfNorm) || sfNorm.includes(af._norm));
+                    
+                    if (isMatch) {
+                        existing = af;
+                        return true;
+                    }
+                    return false;
+                });
+                
+                if (isDuplicate && existing) {
+                    /* Sync ID: ensure the archived version uses the stable static ID for click handlers */
+                    existing.id = sf.id;
+                    /* Ensure we have a high-fidelity image */
+                    if (!existing.img || existing.img.includes('pollinations.ai') || existing.img.includes('placeholder')) {
+                        existing.img = sf.img || LOCAL_ASSETS[sfNorm] || 'assets/hero-bg.png';
+                    }
+                } else if (!isDuplicate) {
+                    /* For static figures, ensure we use their assets/ path */
+                    merged.push({ ...sf, img: sf.img || LOCAL_ASSETS[sfNorm] || 'assets/hero-bg.png' });
+                }
+            });
+            
+            this.figures = merged;
+            console.log(`[Nexus Sync] Unified ${this.figures.length} unique nodes. Local assets prioritized.`);
         } catch(e) {
-            console.error("Failed to load figures.json", e);
+            console.error("[Nexus Sync] Failed to synchronize archive", e);
+            this.figures = [];
         }
 
         /* Render home chronicles preview */
@@ -226,13 +322,12 @@ class EchoApp {
         const grid = this.el.characterCarousel;
         if (!grid) return;
         grid.innerHTML = this.figures.map(f => `
-            <div class="chron-card" onclick="echoApp.goWitness('${f.id}')">
+            <div class="chron-card" onclick="openDetailPanel('${f.id}')">
                 <img src="${f.img}" class="chron-img" alt="${f.name}" loading="lazy">
                 <div class="chron-overlay">
                     <div class="chron-era mono">${f.era}</div>
                     <div class="chron-name">${f.name}</div>
-                    <div class="chron-quote">${f.quote}</div>
-                    <button class="chron-witness-btn mono">WITNESS →</button>
+                    <div class="chron-quote">${f.quote?.replace(/"/g,'').slice(0,80)}...</div>
                 </div>
             </div>
         `).join('');
@@ -311,6 +406,12 @@ class EchoApp {
 
         try {
             const text = await this._fetchChronicle(prompt);
+            
+            // GUARD: Check if we are still on the same figure/moment/page
+            if (this.state.currentPage !== 'witness' || !this.state.figure || this.state.figure.id !== fig.id) {
+                return;
+            }
+
             this.state.narration = text;
             output.innerHTML = '';
             this._typewriter(output, text, () => {
@@ -318,7 +419,9 @@ class EchoApp {
                 if (this.el.forgeActions) this.el.forgeActions.style.display = 'flex';
             });
         } catch (e) {
-            output.innerHTML = `<span class="mono" style="color:#C0392B;">// ${e.message}</span>`;
+            if (this.state.figure && this.state.figure.id === fig.id) {
+                output.innerHTML = `<span class="mono" style="color:#C0392B;">// ${e.message}</span>`;
+            }
         } finally {
             this.state.isLoading = false;
         }
@@ -410,7 +513,14 @@ class EchoApp {
                 body: JSON.stringify({ name })
             });
             const data = await r.json();
-            if (!r.ok) throw new Error(data.error || 'Summon error');
+            if (!r.ok) throw new Error(data.error || 'Temporal Synthesis Failed.');
+
+            // Client-side redundant check for stale placeholders
+            const isPlaceholder = JSON.stringify(data).includes('A unique camelCase ID') || 
+                                  JSON.stringify(data).includes('The figure\'s full historic name') ||
+                                  JSON.stringify(data).includes('A year string');
+
+            if (isPlaceholder) throw new Error('Timeline Integrity Failure: AI returned placeholder text.');
 
             this.figures.unshift(data);
             this._renderChroniclesFull();
@@ -424,6 +534,9 @@ class EchoApp {
 
         } catch (e) {
             output.innerHTML = `<span class="mono" style="color:#C0392B;">// ${e.message}</span>`;
+            if (this.el.forgeActions) this.el.forgeActions.style.display = 'block';
+        } finally {
+            if (thinkEl) thinkEl.style.display = 'none';
         }
     }
 
@@ -768,12 +881,39 @@ class EchoApp {
             });
         }
 
+        /* --- Add Solar Chariot --- */
+        const chariotGroup = new THREE.Group();
+        const chariotDiscGeo = new THREE.RingGeometry(0.22, 0.25, 32);
+        const chariotDiscMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+        const chariotDisc = new THREE.Mesh(chariotDiscGeo, chariotDiscMat);
+        chariotGroup.add(chariotDisc);
+        
+        const chariotCoreGeo = new THREE.SphereGeometry(0.08, 16, 16);
+        const chariotCoreMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+        const chariotCore = new THREE.Mesh(chariotCoreGeo, chariotCoreMat);
+        chariotGroup.add(chariotCore);
+
+        const chariotGlow = new THREE.PointLight(0xD4AF37, 2, 10);
+        chariotGroup.add(chariotGlow);
+        scene.add(chariotGroup);
+
         const globeState = isPreview ? this._globeHome : this._globeFull;
 
+        let chariotTime = 0;
         const animate = () => {
             requestAnimationFrame(animate);
             if (controls) controls.update();
             else globeGroup.rotation.y += 0.002;
+
+            /* Animate Solar Chariot */
+            chariotTime += 0.008;
+            const orbitR = radius * 1.4;
+            chariotGroup.position.set(
+                Math.cos(chariotTime) * orbitR,
+                Math.sin(chariotTime * 0.5) * (orbitR * 0.5),
+                Math.sin(chariotTime) * orbitR
+            );
+            chariotGroup.lookAt(0, 0, 0);
 
             /* Raycasting for hover tooltips (full globe only) */
             if (!isPreview && tooltip) {
@@ -927,6 +1067,308 @@ class EchoApp {
         this._renderHeatmapHome();
         if (this.state.currentPage === 'heatmap') this._renderHeatmapPage();
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       CHARACTER DETAIL PANEL
+       ══════════════════════════════════════════════════════════════ */
+
+    /** Open the detail sidebar for a figure */
+    openDetailPanel(figId) {
+        const fig = this.figures.find(f => f.id === figId);
+        if (!fig) return;
+
+        this._detailFigure = fig;
+
+        /* Set initial static data immediately */
+        const ctxEl   = document.getElementById('detail-context');
+        const nameEl  = document.getElementById('detail-name');
+        const descEl  = document.getElementById('detail-description');
+        const quoteEl = document.getElementById('detail-quote');
+        const lblEl   = document.getElementById('detail-bust-label');
+        const logEl   = document.getElementById('detail-chronicle-stream');
+
+        if (ctxEl)   ctxEl.textContent   = (fig.era || 'UNKNOWN').toUpperCase();
+        if (nameEl)  nameEl.textContent  = fig.name;
+        if (descEl)  descEl.textContent  = fig.role || 'Recovering temporal data fragments...';
+        if (quoteEl) quoteEl.innerHTML   = `&ldquo;${(fig.quote || 'The archive speaks...').replace(/"/g,'')}&rdquo;`;
+        if (lblEl)   lblEl.textContent   = `3D MODEL // ${fig.name.toUpperCase()}`;
+
+        /* Reset chronicle log */
+        if (logEl) logEl.innerHTML = `<div class="chronicle-log-entry"><span class="log-keyword">ECHO_WITNESS</span> // <span class="log-active">ACTIVE</span> // Initializing node [${fig.name}]...</div>`;
+
+        /* Slide in */
+        const panel = document.getElementById('detail-panel');
+        const backdrop = document.getElementById('detail-panel-backdrop');
+        
+        console.log(`[Detail] Opening panel for: ${fig.name}`, { panel, backdrop });
+        
+        if (panel) panel.classList.add('open');
+        if (backdrop) backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        /* 3D Bust */
+        this._initCharacterBust('detail-bust-canvas', fig);
+
+        /* Fetch rich LLM data (non-blocking — panel already shows static data) */
+        this._logToken = (this._logToken || 0) + 1; // Increment token to abort previous typewriter loops
+        this._fetchDetailData(fig);
+    }
+
+    /** Close the detail panel */
+    closeDetailPanel() {
+        document.getElementById('detail-panel')?.classList.remove('open');
+        document.getElementById('detail-panel-backdrop')?.classList.remove('open');
+        document.body.style.overflow = '';
+
+        /* Dispose bust renderer */
+        if (this._bustRenderer) {
+            this._bustRenderer.dispose();
+            this._bustRenderer = null;
+        }
+        this._bustAnimId = null;
+    }
+
+    /** Fetch LLM-enriched data and update panel */
+    async _fetchDetailData(fig) {
+        try {
+            const r = await fetch(`${API}/api/character-detail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: fig.name, era: fig.era, id: fig.id })
+            });
+            if (!r.ok) throw new Error('detail fetch failed');
+            const data = await r.json();
+
+            /* Only update if panel is still open for this figure */
+            if (!document.getElementById('detail-panel')?.classList.contains('open')) return;
+            if (this._detailFigure?.id !== fig.id) return;
+
+            const ctxEl   = document.getElementById('detail-context');
+            const nameEl  = document.getElementById('detail-name');
+            const descEl  = document.getElementById('detail-description');
+            const quoteEl = document.getElementById('detail-quote');
+
+            if (data.context && ctxEl)        ctxEl.textContent  = data.context;
+            if (data.fullName && nameEl)      nameEl.textContent = data.fullName;
+            if (data.coreDescription && descEl)  descEl.textContent = data.coreDescription;
+            if (data.quote && quoteEl) quoteEl.innerHTML = `&ldquo;${data.quote.replace(/"/g,'')}&rdquo;`;
+
+            /* Chronicle log stream — typewriter entries */
+            if (data.chronicleLogs?.length) {
+                this._typewriterLogs(data.chronicleLogs);
+            }
+        } catch (e) {
+            console.warn('[Detail] LLM enrichment failed, using static data.', e.message);
+        }
+    }
+
+    /** Typewriter-animate chronicle log entries one by one */
+    _typewriterLogs(logs) {
+        const container = document.getElementById('detail-chronicle-stream');
+        if (!container) return;
+        
+        const currentToken = this._logToken;
+        container.innerHTML = '';
+
+        let logIdx = 0;
+
+        const addNextLog = () => {
+            if (logIdx >= logs.length) return;
+            if (!document.getElementById('detail-panel')?.classList.contains('open')) return;
+
+            const logText = logs[logIdx];
+            const entry = document.createElement('div');
+            entry.className = 'chronicle-log-entry';
+            entry.style.opacity = '0';
+            container.appendChild(entry);
+
+            /* Colorize keywords */
+            let ci = 0;
+            const tick = () => {
+                if (this._logToken !== currentToken) return; // Abort: panel was reused or closed
+                if (ci >= logText.length) {
+                    /* Finalize — apply keyword colors */
+                    entry.innerHTML = logText
+                        .replace(/(ECHO_WITNESS|TEMPORAL_ANCHOR|ARCHIVE_FRAGMENT|SIMULATION_STATUS|ECHO_CORE)/g, '<span class="log-keyword">$1</span>')
+                        .replace(/(ACTIVE|LOCKED|RECOVERED|RUNNING|PROCESSING)/g, '<span class="log-active">$1</span>');
+                    logIdx++;
+                    setTimeout(addNextLog, 350);
+                    return;
+                }
+                entry.style.opacity = '1';
+                entry.textContent = logText.slice(0, ci + 1);
+                ci++;
+                setTimeout(tick, 12);
+            };
+
+            setTimeout(tick, 200);
+            container.scrollTop = container.scrollHeight;
+        };
+
+        addNextLog();
+    }
+
+    /* ── Procedural 3D Bust ─────────────────────────────────────── */
+    _initCharacterBust(canvasId, fig) {
+        if (!window.THREE) return;
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        /* Dispose previous */
+        if (this._bustRenderer) {
+            this._bustRenderer.dispose();
+            this._bustRenderer = null;
+        }
+        this._bustAnimId = null;
+
+        const parent = canvas.parentElement;
+        const W = parent.offsetWidth || 280;
+        const H = W; // square aspect
+
+        const scene    = new THREE.Scene();
+        const camera   = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+        camera.position.set(0, 1.5, 5.5);
+        camera.lookAt(0, 0.8, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        this._bustRenderer = renderer;
+
+        /* --- Determine character tint from era --- */
+        const eraColors = {
+            'Ancient Egypt':       0xD4AF37,
+            'Ancient Greece':      0x7CB5D4,
+            'Ancient Rome':        0xCC3333,
+            '18th Century France': 0xC9A0DC,
+            'Medieval France':     0x8899AA,
+            'Renaissance':         0xE8A87C,
+            '19th Century Science':0x66CCFF,
+        };
+        const tintHex = eraColors[fig.era] || 0xD4AF37;
+        const tintColor = new THREE.Color(tintHex);
+
+        /* --- Build the bust group --- */
+        const bustGroup = new THREE.Group();
+        scene.add(bustGroup);
+
+        /* Head sphere */
+        const headGeo = new THREE.SphereGeometry(0.58, 32, 32);
+        const headMat = new THREE.MeshStandardMaterial({
+            color: 0x141829,
+            emissive: tintColor,
+            emissiveIntensity: 0.15,
+            metalness: 0.7,
+            roughness: 0.35,
+        });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 2.0;
+        bustGroup.add(head);
+
+        /* Wireframe shell around head */
+        const wireGeo = new THREE.SphereGeometry(0.62, 20, 20);
+        const wireMat = new THREE.MeshBasicMaterial({ color: tintHex, wireframe: true, transparent: true, opacity: 0.18 });
+        const wireHead = new THREE.Mesh(wireGeo, wireMat);
+        wireHead.position.copy(head.position);
+        bustGroup.add(wireHead);
+
+        /* Neck cylinder */
+        const neckGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.45, 16);
+        const neckMat = new THREE.MeshStandardMaterial({ color: 0x141829, emissive: tintColor, emissiveIntensity: 0.1, metalness: 0.6, roughness: 0.4 });
+        const neck = new THREE.Mesh(neckGeo, neckMat);
+        neck.position.y = 1.35;
+        bustGroup.add(neck);
+
+        /* Torso — tapered cylinder */
+        const torsoGeo = new THREE.CylinderGeometry(0.55, 0.75, 1.3, 24);
+        const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0E1120, emissive: tintColor, emissiveIntensity: 0.08, metalness: 0.5, roughness: 0.5 });
+        const torso = new THREE.Mesh(torsoGeo, torsoMat);
+        torso.position.y = 0.5;
+        bustGroup.add(torso);
+
+        /* Wireframe torso */
+        const wireTorsoGeo = new THREE.CylinderGeometry(0.58, 0.78, 1.32, 16);
+        const wireTorsoMat = new THREE.MeshBasicMaterial({ color: tintHex, wireframe: true, transparent: true, opacity: 0.08 });
+        const wireTorso = new THREE.Mesh(wireTorsoGeo, wireTorsoMat);
+        wireTorso.position.y = 0.5;
+        bustGroup.add(wireTorso);
+
+        /* Shoulder caps */
+        [-1, 1].forEach(side => {
+            const shoulderGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x0E1120, emissive: tintColor, emissiveIntensity: 0.1, metalness: 0.6, roughness: 0.4 });
+            const shoulder = new THREE.Mesh(shoulderGeo, shoulderMat);
+            shoulder.position.set(side * 0.65, 1.05, 0);
+            bustGroup.add(shoulder);
+        });
+
+        /* Base pedestal */
+        const baseGeo = new THREE.CylinderGeometry(0.85, 0.9, 0.15, 32);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x090C14, emissive: tintColor, emissiveIntensity: 0.05, metalness: 0.8, roughness: 0.3 });
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.y = -0.22;
+        bustGroup.add(base);
+
+        /* Orbital ring around bust */
+        const orbitGeo = new THREE.TorusGeometry(1.2, 0.015, 8, 64);
+        const orbitMat = new THREE.MeshBasicMaterial({ color: tintHex, transparent: true, opacity: 0.3 });
+        const orbitRing = new THREE.Mesh(orbitGeo, orbitMat);
+        orbitRing.position.y = 1.2;
+        orbitRing.rotation.x = Math.PI / 3;
+        bustGroup.add(orbitRing);
+
+        /* Small orbiting point light */
+        const orbitLight = new THREE.PointLight(tintHex, 0.6, 6);
+        bustGroup.add(orbitLight);
+
+        /* Rim light from behind */
+        const rimLight = new THREE.PointLight(tintHex, 1.2, 10);
+        rimLight.position.set(0, 2.5, -3);
+        scene.add(rimLight);
+
+        /* Ambient + key light */
+        scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        keyLight.position.set(2, 3, 4);
+        scene.add(keyLight);
+
+        /* --- Animate --- */
+        let t = 0;
+        const animId = {};
+        this._bustAnimId = animId;
+
+        const animate = () => {
+            if (this._bustAnimId !== animId) return; // disposed
+            requestAnimationFrame(animate);
+            t += 0.016;
+
+            /* Breathing: subtle scale oscillation */
+            const breath = 1 + 0.015 * Math.sin(t * 1.6);
+            torso.scale.set(1, breath, 1);
+            head.position.y = 2.0 + 0.01 * Math.sin(t * 1.6);
+
+            /* Orbit ring rotation */
+            orbitRing.rotation.z = t * 0.3;
+
+            /* Orbiting point light */
+            orbitLight.position.set(
+                Math.cos(t * 0.7) * 2.5,
+                1.5 + Math.sin(t * 0.5) * 0.5,
+                Math.sin(t * 0.7) * 2.5
+            );
+
+            /* Wireframe shimmer */
+            wireHead.rotation.y = t * 0.15;
+            wireTorso.rotation.y = -t * 0.1;
+
+            /* Slow bust rotation */
+            bustGroup.rotation.y = Math.sin(t * 0.2) * 0.15;
+
+            renderer.render(scene, camera);
+        };
+        animate();
+    }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -942,6 +1384,17 @@ window.toggleAPI    = () => {
     overlay?.classList.toggle('open');
 };
 window.sendChat     = () => echoApp.sendChat();
+
+/* Detail Panel global handlers (referenced from index.html onclick) */
+window.openDetailPanel  = (figId) => echoApp.openDetailPanel(figId);
+window.closeDetailPanel = ()      => echoApp.closeDetailPanel();
+
+/* Escape key → close detail panel */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('detail-panel')?.classList.contains('open')) {
+        echoApp.closeDetailPanel();
+    }
+});
 
 window.addEventListener('DOMContentLoaded', () => echoApp.init());
 window.addEventListener('beforeunload',     () => window.speechSynthesis?.cancel());

@@ -1,13 +1,19 @@
 {
   "Mythological India": 4,
-  "Ancient Greece": 16,
+  "Ancient Greece": 21,
   "Ancient Rome": 4,
-  "19th Century Science": 4,
-  "Ancient Egypt": 14,
+  "19th Century Science": 5,
+  "Ancient Egypt": 17,
   "Victorian England": 0,
   "Middle-earth": 0,
   "Custom Vision": 1,
   "Test Era": 2,
   "18th Century France": 3,
-  "Medieval France": 4
+  "Medieval France": 4,
+  "e.g. Ancient Rome": 2,
+  "A descriptive era name (like 18th Century France or Ancient Egypt)": 1,
+  "13th and 14th Centuries China": 1,
+  "17th Century Mongolia": 1,
+  "16th/Civil War Period America": 1,
+  "1327–1406": 1
 }

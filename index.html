@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>ECHO — Cinematic AI Time-Travel</title>
     <meta name="description" content="Cinematic time-travel intelligence. Witness the moments that shaped history.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,12 +19,68 @@
 <div id="echo-cursor"></div>
 <div id="echo-cursor-dot"></div>
 
+<!-- ────────────────────────────────────────
+   GLOBE HOVER TOOLTIP
+   ──────────────────────────────────────── -->
+<div id="globe-tooltip" class="hidden">
+    <div id="tooltip-country"></div>
+    <div id="tooltip-name"></div>
+    <div id="tooltip-role"></div>
+</div>
+
+<!-- ────────────────────────────────────────
+   CHARACTER DETAIL PANEL — Terminal Noir Sidebar
+   ──────────────────────────────────────── -->
+<div class="detail-panel-backdrop" id="detail-panel-backdrop" onclick="closeDetailPanel()"></div>
+<div id="detail-panel">
+    <div class="detail-panel-header">
+        <span class="detail-panel-label mono">CHRONOS ARCHIVE // WITNESS RECORD</span>
+        <div class="detail-panel-controls">
+            <button class="detail-panel-arrow-close" onclick="closeDetailPanel()" title="Slide Right">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <button class="detail-panel-close" onclick="closeDetailPanel()">×</button>
+        </div>
+    </div>
+    <div class="detail-panel-body">
+        <!-- Col 1: Procedural 3D Bust -->
+        <div class="detail-col-bust">
+            <canvas class="detail-bust-canvas" id="detail-bust-canvas"></canvas>
+            <div class="detail-bust-label mono" id="detail-bust-label">3D MODEL // RENDERING</div>
+            <div class="detail-bust-breath"></div>
+        </div>
+        <!-- Col 2: Structured Data -->
+        <div class="detail-col-data">
+            <div class="detail-context mono" id="detail-context">--</div>
+            <div class="detail-name" id="detail-name">—</div>
+            <div class="detail-divider"></div>
+            <div class="detail-field-label mono">CORE DESCRIPTION</div>
+            <div class="detail-description" id="detail-description">Initializing archive...<br>Recovering temporal data fragments...</div>
+            <div class="detail-field-label mono" style="margin-top:20px">DEFINITIVE QUOTE</div>
+            <div class="detail-quote" id="detail-quote">&ldquo;The archive speaks...&rdquo;</div>
+        </div>
+        <!-- Col 3: Chronicle Log -->
+        <div class="detail-col-chronicle">
+            <div class="detail-chronicle-header">
+                <div class="detail-chronicle-dot"></div>
+                <span class="detail-chronicle-title mono">THE CHRONICLE // LIVE STREAM</span>
+            </div>
+            <div class="detail-chronicle-stream" id="detail-chronicle-stream">
+                <div class="chronicle-log-entry">
+                    <span class="log-keyword">ECHO_WITNESS</span> // <span class="log-active">ACTIVE</span> // Awaiting node selection...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="app">
 
-    <!-- ─── NAVIGATION ──────────────────────────────────────────────── -->
+
+    <!-- ─── NAVIGATION ──────────────────────────────────────── -->
     <nav id="main-nav">
         <div class="nav-brand" onclick="echoApp.go('home')">
-            <span class="brand-text">ECHO</span>
+            <span class="brand-text">THE CHRONOS ARCHIVE</span>
         </div>
         <div class="nav-links">
             <a href="#" class="nav-link active" onclick="echoApp.go('chronicles'); return false;" id="nav-chronicles">CHRONICLES</a>
@@ -45,19 +101,24 @@
     <!-- ─── PAGE: NEXUS HERO ────────────────────────────────────────── -->
     <div id="page-home" class="page active">
 
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-watermark">NEXUS</div>
-            <div class="hero-left">
-                <div class="hero-eyebrow mono">ECHO WITNESS // ACTIVE</div>
+        <!-- Hero Section — full-screen wireframe Chronosphere -->
+        <section class="hero-section" style="position:relative; overflow:hidden;">
+            <!-- Wireframe globe fills the background -->
+            <div id="chronosphere-globe-home" style="position:absolute;inset:0;z-index:1;"></div>
+            <!-- Subtle dark vignette over globe edges -->
+            <div style="position:absolute;inset:0;z-index:2;background:radial-gradient(ellipse 70% 80% at 50% 50%, transparent 40%, rgba(0,1,3,0.7) 100%);pointer-events:none;"></div>
+
+            <div class="hero-watermark" style="z-index:3;">NEXUS</div>
+            <div class="hero-left" style="position:relative;z-index:4;">
+                <div class="hero-eyebrow mono">THE CHRONOS ARCHIVE // SIMULATION ACTIVE</div>
                 <h1 class="hero-headline">THE ARCHIVE IS<br>BREATHING.</h1>
-                <p class="hero-body">Cutting memories of the historical past. Every shard recovered is a fragment of the archive's original heart.</p>
+                <p class="hero-body">Every recovered memory is a fragment of the archive's original heart. The globe turns. The timeline holds.</p>
                 <div class="hero-ctas">
                     <button class="cta-primary" onclick="echoApp.go('chronicles')">THE CHRONICLE</button>
-                    <button class="cta-secondary" onclick="echoApp.go('forge')">PROTOCOL. A</button>
+                    <button class="cta-secondary" onclick="echoApp.go('heatmap')">CHRONOSPHERE</button>
                 </div>
             </div>
-            <div class="hero-right">
+            <div class="hero-right" style="position:relative;z-index:4;">
                 <div class="hero-artifact-wrap" id="crystal-wrap">
                     <canvas id="chronosphere-canvas" class="chronosphere-canvas"></canvas>
                     <div class="hero-crystal-label mono">ECHO_CHRONOSPHERE // NODE_001</div>

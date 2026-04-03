@@ -1,0 +1,235 @@
+{
+  "cleopatra_vii": {
+    "context": "ANCIENT EGYPT",
+    "fullName": "Cleopatra VII Philopator",
+    "coreDescription": "The last active ruler of the Ptolemaic Kingdom of Egypt, famous for her political alliances with Julius Caesar and Mark Antony.",
+    "quote": "She is more than a queen. She is Egypt itself.",
+    "events": [
+      {
+        "year": "51 BCE",
+        "description": "Ascension to the throne following the death of her father."
+      },
+      {
+        "year": "48 BCE",
+        "description": "Dramatic meeting with Julius Caesar, securing her hold on Egypt."
+      },
+      {
+        "year": "30 BCE",
+        "description": "The fall of Alexandria and her tragic final choice."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // 51 BCE // Analyzing ascension ritual... data stream verified.",
+      "DATA_CORRUPTION // 48 BCE // Temporal anomaly detected during Caesar encounter.",
+      "SYS_LOG // 30 BCE // Final node closure... Egyptian sovereignty terminated.",
+      "ARCHIVE_FRAGMENT // MEMORY // The scent of jasmine and the Nile at dusk."
+    ]
+  },
+  "achilles": {
+    "context": "ANCIENT GREECE",
+    "fullName": "Achilles",
+    "coreDescription": "The greatest warrior of the Trojan War and the central character of Homer's Iliad, possessing unmatched prowess in battle.",
+    "quote": "I carry two sorts of destiny toward the day of my death.",
+    "events": [
+      {
+        "year": "~1194 BCE",
+        "description": "The wrath of Achilles begins after his dispute with Agamemnon."
+      },
+      {
+        "year": "~1194 BCE",
+        "description": "The death of Patroclus drives Achilles back into the fray."
+      },
+      {
+        "year": "~1194 BCE",
+        "description": "The fall of the hero at the gates of Troy."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // TROY // Combat telemetry at 100%... unparalleled efficiency.",
+      "SYS_LOG // GRIEF // Acoustic analysis: sea echoes his mourning for Patroclus.",
+      "DATA_CORRUPTION // VULNERABILITY // Scanning heel structure... fatal flaw confirmed.",
+      "ARCHIVE_FRAGMENT // ECHO // The sound of bronze on bronze across the plain."
+    ]
+  },
+  "marie_antoinette": {
+    "context": "18TH CENTURY FRANCE",
+    "fullName": "Marie Antoinette",
+    "coreDescription": "The last Queen of France before the French Revolution, symbolizing the splendor and ultimate downfall of the Bourbon monarchy.",
+    "quote": "Let them eat cake.",
+    "events": [
+      {
+        "year": "1770",
+        "description": "Arrival at the court of Versailles to marry the future Louis XVI."
+      },
+      {
+        "year": "1789",
+        "description": "The march on Versailles forces the royal family to Paris."
+      },
+      {
+        "year": "1793",
+        "description": "The final days in the Conciergerie before the guillotine."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // VERSAILLES // Spectrometry: pure gold leaf everywhere.",
+      "SYS_LOG // REVOLUTION // Audio stream: the sound of a thousand hungry voices.",
+      "DATA_CORRUPTION // CELL // Temperature in Conciergerie: 4°C. Health declining.",
+      "ARCHIVE_FRAGMENT // MEMORY // The white flowers of the Trianon garden."
+    ]
+  },
+  "julius_caesar": {
+    "context": "ANCIENT ROME",
+    "fullName": "Gaius Julius Caesar",
+    "coreDescription": "Roman general and statesman whose dictatorship marked the end of the Roman Republic and the rise of the Empire.",
+    "quote": "Veni, vidi, vici — I came, I saw, I conquered.",
+    "events": [
+      {
+        "year": "49 BCE",
+        "description": "Crossing the Rubicon, a point of no return for Rome."
+      },
+      {
+        "year": "44 BCE",
+        "description": "The Ides of March: betrayal in the heart of the Senate."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // RUBICON // Pulse rate: 110bpm. Decision finalized.",
+      "SYS_LOG // SENATE // Thermal signature of 23 distinct blades detected.",
+      "DATA_CORRUPTION // BETRAYAL // Audio fragment recovered: 'Et tu, Brute?'",
+      "ARCHIVE_FRAGMENT // STATUS // Republic integrity at 0%. Empire initializing."
+    ]
+  },
+  "nikola_tesla": {
+    "context": "19TH CENTURY SCIENCE",
+    "fullName": "Nikola Tesla",
+    "coreDescription": "Serbian-American inventor and electrical engineer who revolutionized the modern world with alternating current and wireless energy concepts.",
+    "quote": "The present is theirs; the future, for which I really worked, is mine.",
+    "events": [
+      {
+        "year": "1893",
+        "description": "Illuminating the Chicago World's Fair with AC power."
+      },
+      {
+        "year": "1899",
+        "description": "Conducting wireless energy experiments in Colorado Springs."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // CHICAGO // Million-bulb luminescence confirmed. AC dominance.",
+      "SYS_LOG // COLORADO // Artificial lightning 130ft long. EM field peak.",
+      "DATA_CORRUPTION // WIRELESS // Signal intercepted from unknown source... or delusion.",
+      "ARCHIVE_FRAGMENT // POWER // High-voltage hum resonating in the timeline."
+    ]
+  },
+  "leonardo_da_vinci": {
+    "context": "RENAISSANCE",
+    "fullName": "Leonardo da Vinci",
+    "coreDescription": "The ultimate Renaissance Man, a master of art, anatomy, and engineering whose concepts were centuries ahead of his time.",
+    "quote": "Learning never exhausts the mind.",
+    "events": [
+      {
+        "year": "1482",
+        "description": "Working on conceptual flying machines and war engines in Florence."
+      },
+      {
+        "year": "1503",
+        "description": "Beginning work on the Mona Lisa, pioneering sfumato techniques."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // FLORENCE // Analyzing wing lift ratios... gliding possible.",
+      "SYS_LOG // CANVAS // SFUMATO protocol active. Blending light/shadow.",
+      "DATA_CORRUPTION // ANATOMY // Thousands of sketches analyzed. Muscle map 100%.",
+      "ARCHIVE_FRAGMENT // VISION // The world seen as geometry and flow."
+    ]
+  },
+  "joan_of_arc": {
+    "context": "MEDIEVAL FRANCE",
+    "fullName": "Jeanne d'Arc",
+    "coreDescription": "A peasant girl whose divine visions led her to command French armies and break the English siege of Orléans.",
+    "quote": "I am not afraid; I was born to do this.",
+    "events": [
+      {
+        "year": "1429",
+        "description": "Leading the French charge to lift the Siege of Orléans."
+      },
+      {
+        "year": "1431",
+        "description": "The trial and ultimate sacrifice at the stake in Rouen."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // ORLEANS // White standard visible. French morale peaking.",
+      "SYS_LOG // VOICES // Audio analysis: rhythmic, melodic, source untraceable.",
+      "DATA_CORRUPTION // PYRE // Temperature spikes. Final words recorded: 'Jesus'.",
+      "ARCHIVE_FRAGMENT // SACRIFICE // The smell of ash and the ringing of bells."
+    ]
+  },
+  "alexander_the_great": {
+    "context": "ANCIENT GREECE",
+    "fullName": "Alexander III of Macedon",
+    "coreDescription": "King of Macedonia who conquered the Persian Empire and spread Hellenistic culture across three continents.",
+    "quote": "There is nothing impossible to him who will try.",
+    "events": [
+      {
+        "year": "333 BCE",
+        "description": "Battle of Issus, where he broke the spine of the Persian army."
+      },
+      {
+        "year": "323 BCE",
+        "description": "The sudden fever in Babylon that ended his reign."
+      }
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS // ISSUS // Charging the line. Darius III thermal sig: retracting.",
+      "SYS_LOG // BABYLON // Analysis of fever symptoms: suspicious anomalies found.",
+      "DATA_CORRUPTION // EMPIRE // Division protocol initiated: 'To the strongest'.",
+      "ARCHIVE_FRAGMENT // CONQUEST // Hoofbeats of Bucephalus on a world map."
+    ]
+  },
+  "genghis_khan": {
+    "context": "Genghis Khan, a伟民族大地上一位壮丽的历史见证者",
+    "fullName": "Genghis Khan, a伟民族大地上一位伟大者",
+    "coreDescription": "'Genghis Khan' is described as an伟民族大地上壮丽的历史见证者.",
+    "quote": "'I am the first and greatest conqueror,' a伟民族大地上伟大者.",
+    "events": [
+      "ECHO_WITNESS: \"Genghis Khan arrives in Xinjiang under Mongol rule\"",
+      "ECHO_WITNESS: \"Mongol Empire expands into China\"",
+      "ECHO_WITNESS: \"Conquering the Silk Road begins in 1397\"",
+      "THE_LOG: \"A伟民族大地上一位壮丽的历史见证者\""
+    ],
+    "chronicleLogs": [
+      "ECHO_WITNESS: \"Genghis Khan arrives in Xinjiang under Mongol rule\"",
+      "ECHO_WITNESS: \"Mongol Empire expands into China\"",
+      "ECHO_WITNESS: \"Conquering the Silk Road begins in 1397\"",
+      "THE_LOG: \"A伟民族大地上一位壮丽的历史见证者\""
+    ],
+    "imagePrompt": "A cinematic figure in a dark academic setting, part of a lecture hall with glowing lights, highlighting tension between past and present, featuring shadows and strange artifacts.",
+    "img": "https://image.pollinations.ai/prompt/A%20cinematic%20figure%20in%20a%20dark%20academic%20setting%2C%20part%20of%20a%20lecture%20hall%20with%20glowing%20lights%2C%20highlighting%20tension%20between%20past%20and%20present%2C%20featuring%20shadows%20and%20strange%20artifacts.?width=400&height=500&nologo=true",
+    "id": "Genghis Khan"
+  },
+  "newton": {
+    "id": "Isaac Newton",
+    "fullName": "Isaac Newton",
+    "era": "English physicist and mathematician",
+    "icon": "A relevant emoji",
+    "quote": "\"An idea is never too perfect once it has been formed.\"\"",
+    "coreDescription": "\"A prodigious intellect who made groundbreaking contributions to physics and mathematics, particularly with his laws of motion and the principle of universal gravitation. He was a key figure in the scientific revolution and laid the groundwork for calculus.\"",
+    "country": "United States",
+    "role": "Historical Role",
+    "lat": 0,
+    "lng": 0,
+    "moments": [
+      {
+        "year": "1643–1660",
+        "title": "Early life and education",
+        "desc": "Newton's early life includes his education at The King's School in Woolsthorpe."
+      }
+    ],
+    "img": "https://image.pollinations.ai/prompt/Isaac%20Newton%20cinematic%20historical%20portrait%20dark%20academia%20ultra%20intricate%208k?width=400&height=500&nologo=true",
+    "chronicleLogs": [
+      "SYS_LOG // 2026 // Neural synthesis verified.",
+      "ARCHIVE_FRAGMENT // RECOVERED // Figure [Isaac Newton] forged in the Nexus."
+    ]
+  }
+}
