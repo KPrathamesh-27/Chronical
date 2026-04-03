@@ -1,6 +1,6 @@
 # ECHO — Cinematic AI Time-Travel UI
 
-ECHO is an immersive, high-fidelity editorial web application that blends rich 3D interactions, aesthetic cinematic design ("Dark Academia"), and generative historical AI. It simulates a futuristic "timeline archive" where users can visualize historical data, inspect interactive character chronicles, and forge new temporal memories using Google Gemini AI.
+Projects goal is to build a digital library of these "time-slips" a place where mythology geeks can stop being observers and start being participants in the greatest stories ever told. ECHO is an immersive, high-fidelity editorial web application that blends rich 3D interactions, aesthetic cinematic design ("Dark Academia"), and generative historical AI. It simulates a futuristic "timeline archive" where users can visualize historical data, inspect interactive character chronicles, and forge new temporal memories using Google Gemini AI.
 
 ## ✨ Features Available
 
