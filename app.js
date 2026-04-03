@@ -324,20 +324,26 @@ class EchoApp {
         }
     }
 
-    /* ── Forge / Imagine Feature ────────────────────────────────── */
+    /* ── Forge / Imagine Feature ─────────────────────────────────────── */
     async handleImagine() {
         const input  = this.el.imagineInput;
         const output = this.el.narrationText;
         if (!input || !output) return;
 
-        const concept = input.value.trim();
+        /* Support both <input> and <textarea> */
+        const concept = (input.value ?? '').trim();
         if (!concept) return;
 
         input.value = '';
+        if (input.style) input.style.height = '';
         this.state.narration = '';
 
         output.innerHTML = '<span class="mono" style="color:var(--muted-dark)">// SYNTHESIZING REALITY...</span>';
         if (this.el.forgeActions) this.el.forgeActions.style.display = 'none';
+
+        /* Show thinking indicator */
+        const thinkEl = document.getElementById('forge-thinking');
+        if (thinkEl) thinkEl.style.display = 'flex';
 
         try {
             const r = await fetch(`${API}/api/imagine`, {
@@ -350,10 +356,8 @@ class EchoApp {
 
             this.state.narration = data.narration;
 
-            /* Build cinematic image + typewriter */
             output.innerHTML = '';
 
-            /* Simulated Video Container */
             const videoWrap = document.createElement('div');
             videoWrap.className = 'simulated-video-container';
 
@@ -377,21 +381,27 @@ class EchoApp {
 
         } catch (e) {
             output.innerHTML = `<span class="mono" style="color:#C0392B;">// ${e.message}</span>`;
+        } finally {
+            if (thinkEl) thinkEl.style.display = 'none';
         }
     }
 
-    /* ── Summon New Historical Figure via LLM ────────────────────── */
+    /* ── Summon New Historical Figure via LLM ──────────────────────────── */
     async handleSummon() {
         const input  = this.el.summonInput;
         const output = this.el.narrationText;
         if (!input || !output) return;
 
-        const name = input.value.trim();
+        const name = (input.value ?? '').trim();
         if (!name) return;
 
         input.value = '';
+        if (input.style) input.style.height = '';
         output.innerHTML = '<span class="mono" style="color:var(--muted-dark)">// EXCAVATING HISTORICAL RECORD...</span>';
         if (this.el.forgeActions) this.el.forgeActions.style.display = 'none';
+
+        const thinkEl = document.getElementById('forge-thinking');
+        if (thinkEl) thinkEl.style.display = 'flex';
         
         try {
             const r = await fetch(`${API}/api/character`, {
@@ -671,10 +681,7 @@ class EchoApp {
             opacity: 0.95
         });
         const globeMesh = new THREE.Mesh(sphereGeo, baseMat);
-        
-        // Align standard SphereGeometry UVs to Cartesian math projection
-        globeMesh.rotation.y = -Math.PI / 2;
-        
+        // No manual rotation — coordinate math already handles alignment
         globeGroup.add(globeMesh);
 
         // Wireframe overlay
@@ -728,15 +735,61 @@ class EchoApp {
         scene.add(directionalLight);
 
         if (isPreview) {
-            this._globeHome = { scene, globeGroup, renderer, camera, markers: [], radius };
+            this._globeHome = { scene, globeGroup, renderer, camera, controls, markers: [], radius };
         } else {
-            this._globeFull = { scene, globeGroup, renderer, camera, markers: [], radius };
+            this._globeFull = { scene, globeGroup, renderer, camera, controls, markers: [], radius, isRotating: true };
         }
+
+        const raycaster = new THREE.Raycaster();
+        const mouse     = new THREE.Vector2(-9999, -9999);
+        const tooltip   = document.getElementById('globe-tooltip');
+        const tCountry  = document.getElementById('tooltip-country');
+        const tName     = document.getElementById('tooltip-name');
+        const tRole     = document.getElementById('tooltip-role');
+        let   lastX = 0, lastY = 0;
+
+        if (!isPreview && tooltip) {
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+                mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+                lastX = e.clientX; lastY = e.clientY;
+            });
+            renderer.domElement.addEventListener('mouseleave', () => {
+                mouse.set(-9999, -9999);
+                if (tooltip) tooltip.classList.add('hidden');
+            });
+        }
+
+        const globeState = isPreview ? this._globeHome : this._globeFull;
 
         const animate = () => {
             requestAnimationFrame(animate);
             if (controls) controls.update();
             else globeGroup.rotation.y += 0.002;
+
+            /* Raycasting for hover tooltips (full globe only) */
+            if (!isPreview && tooltip) {
+                raycaster.setFromCamera(mouse, camera);
+                const interactables = (globeState.markers || []).filter(m => m.userData?.figure);
+                const hits = raycaster.intersectObjects(interactables);
+                if (hits.length > 0) {
+                    const fig = hits[0].object.userData.figure;
+                    tCountry.textContent = fig.country || fig.era;
+                    tName.textContent    = fig.name;
+                    tRole.textContent    = fig.role || '';
+                    tooltip.style.left   = (lastX + 16) + 'px';
+                    tooltip.style.top    = (lastY + 16) + 'px';
+                    /* Clamp to viewport */
+                    const tw = 296, th = 110;
+                    if (lastX + 16 + tw > window.innerWidth)  tooltip.style.left = (lastX - tw - 8) + 'px';
+                    if (lastY + 16 + th > window.innerHeight)  tooltip.style.top  = (lastY - th - 8) + 'px';
+                    tooltip.classList.remove('hidden');
+                } else {
+                    tooltip.classList.add('hidden');
+                }
+            }
+
             renderer.render(scene, camera);
         };
         animate();
@@ -777,23 +830,23 @@ class EchoApp {
                 const lat = Number(figure.lat);
                 const lng = Number(figure.lng);
                 
-                const phi = (90 - lat) * (Math.PI / 180);
+                const phi   = (90 - lat) * (Math.PI / 180);
                 const theta = (lng + 180) * (Math.PI / 180);
 
                 const x = -(radius * Math.sin(phi) * Math.cos(theta));
-                const z = (radius * Math.sin(phi) * Math.sin(theta));
-                const y = (radius * Math.cos(phi));
+                const z =  (radius * Math.sin(phi) * Math.sin(theta));
+                const y =  (radius * Math.cos(phi));
 
-                // Heatmap Red-Orange-Yellow gradient simulation
-                let colorHex = 0xffa500; // Default orange/yellow
+                let colorHex = 0xffa500;
                 if (intensity > 0.8) colorHex = 0xff0000;
                 else if (intensity > 0.4) colorHex = 0xff4500;
                 
-                // Solid core
-                const markerGeo = new THREE.SphereGeometry(0.2 + (intensity * 0.3), 16, 16);
-                const markerMat = new THREE.MeshBasicMaterial({ color: colorHex });
+                // Solid core — stores figure data for raycaster
+                const markerGeo  = new THREE.SphereGeometry(0.2 + (intensity * 0.3), 16, 16);
+                const markerMat  = new THREE.MeshBasicMaterial({ color: colorHex });
                 const markerMesh = new THREE.Mesh(markerGeo, markerMat);
                 markerMesh.position.set(x, y, z);
+                markerMesh.userData = { figure };
                 
                 // Glow Halo
                 const haloGeo = new THREE.SphereGeometry(0.4 + (intensity * 0.8), 32, 32);
@@ -806,6 +859,8 @@ class EchoApp {
                 });
                 const haloMesh = new THREE.Mesh(haloGeo, haloMat);
                 haloMesh.position.set(x, y, z);
+                /* halos don't participate in raycasting */
+                haloMesh.userData = {};
                 
                 globeGroup.add(markerMesh);
                 globeGroup.add(haloMesh);
@@ -883,3 +938,149 @@ window.sendChat     = () => echoApp.sendChat();
 
 window.addEventListener('DOMContentLoaded', () => echoApp.init());
 window.addEventListener('beforeunload',     () => window.speechSynthesis?.cancel());
+
+/* ─────────────────────────────────────────────────────────────
+   FORGE V2 — UI Controller
+   ───────────────────────────────────────────────────────────── */
+let _forgeMode = 'forge'; // 'forge' | 'summon'
+
+function forgeSetMode(mode) {
+    _forgeMode = mode;
+    /* Swap tab active state */
+    document.getElementById('tab-forge')?.classList.toggle('active', mode === 'forge');
+    document.getElementById('tab-summon')?.classList.toggle('active', mode === 'summon');
+
+    /* Swap textarea visibility */
+    const imagineTA = document.getElementById('imagine-input');
+    const summonTA  = document.getElementById('summon-input');
+    if (imagineTA) imagineTA.style.display = mode === 'forge'  ? '' : 'none';
+    if (summonTA)  summonTA.style.display  = mode === 'summon' ? '' : 'none';
+
+    /* Update send button label */
+    const label = document.getElementById('forge-send-label');
+    if (label) label.textContent = mode === 'forge' ? 'FORGE' : 'SUMMON';
+}
+
+function forgeSubmit() {
+    if (_forgeMode === 'forge') {
+        echoApp.handleImagine();
+    } else {
+        echoApp.handleSummon();
+    }
+}
+
+function forgeToggleCmds() {
+    const palette = document.getElementById('forge-cmd-palette');
+    const btn     = document.querySelector('.forge-cmd-toggle');
+    if (!palette) return;
+    const isOpen = palette.classList.toggle('open');
+    btn?.classList.toggle('active', isOpen);
+}
+
+function forgeSelectCmd(text) {
+    const ta = document.getElementById('imagine-input');
+    if (ta) {
+        ta.value = text;
+        ta.focus();
+        ta.dispatchEvent(new Event('input'));
+    }
+    /* Close palette */
+    document.getElementById('forge-cmd-palette')?.classList.remove('open');
+    document.querySelector('.forge-cmd-toggle')?.classList.remove('active');
+}
+
+function forgeChip(text) {
+    /* Auto-fill the textarea with the chip text and switch to forge mode */
+    forgeSetMode('forge');
+    const ta = document.getElementById('imagine-input');
+    if (ta) { ta.value = text; ta.focus(); }
+}
+
+function forgeAttach() {
+    const names = ['reference.pdf', 'era-notes.txt', 'timeline.csv'];
+    const name  = names[Math.floor(Math.random() * names.length)];
+    const strip = document.getElementById('forge-attachments');
+    if (!strip) return;
+    const tag = document.createElement('div');
+    tag.className = 'forge-attachment-tag';
+    tag.innerHTML = `<span>${name}</span><button onclick="this.parentElement.remove()">&times;</button>`;
+    strip.appendChild(tag);
+}
+
+/* Auto-resize forge textareas */
+document.addEventListener('DOMContentLoaded', () => {
+    ['imagine-input', 'summon-input'].forEach(id => {
+        const ta = document.getElementById(id);
+        if (!ta) return;
+        ta.addEventListener('input', () => {
+            ta.style.height = 'auto';
+            ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
+
+            /* Show/hide command palette on "/" trigger */
+            if (id === 'imagine-input') {
+                const val = ta.value;
+                const palette = document.getElementById('forge-cmd-palette');
+                if (palette) {
+                    const startsWithSlash = val.startsWith('/') && !val.includes(' ');
+                    palette.classList.toggle('open', startsWithSlash);
+                    document.querySelector('.forge-cmd-toggle')?.classList.toggle('active', startsWithSlash);
+                }
+            }
+        });
+        ta.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                forgeSubmit();
+            }
+        });
+    });
+
+    /* Close cmd palette on click outside */
+    document.addEventListener('mousedown', e => {
+        const palette = document.getElementById('forge-cmd-palette');
+        const toggle  = document.querySelector('.forge-cmd-toggle');
+        if (palette && !palette.contains(e.target) && !toggle?.contains(e.target)) {
+            palette.classList.remove('open');
+            toggle?.classList.remove('active');
+        }
+    });
+});
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBE CONTROLS
+   ───────────────────────────────────────────────────────────── */
+function globeZoom(direction) {
+    const gs = echoApp._globeFull;
+    if (!gs) return;
+    const { camera } = gs;
+    const step = direction > 0 ? 0.85 : 1.18; // zoom in = pull camera closer
+    camera.position.z = Math.max(14, Math.min(60, camera.position.z * step));
+    camera.updateProjectionMatrix();
+}
+
+function globeToggleRotate() {
+    const gs  = echoApp._globeFull;
+    const btn = document.getElementById('btn-globe-rotate');
+    if (!gs) return;
+    if (gs.controls) {
+        gs.isRotating = !gs.isRotating;
+        gs.controls.autoRotate = gs.isRotating;
+        btn?.classList.toggle('active', gs.isRotating);
+    }
+}
+
+function globeReset() {
+    const gs = echoApp._globeFull;
+    if (!gs) return;
+    const { camera, controls } = gs;
+    camera.position.set(0, 0, 28);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+    if (controls) {
+        controls.reset();
+        controls.autoRotate = true;
+        gs.isRotating = true;
+        document.getElementById('btn-globe-rotate')?.classList.add('active');
+    }
+}
+
