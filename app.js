@@ -609,6 +609,13 @@ class EchoApp {
         setTimeout(() => {
             if (!this._globeFull) this._initWebGLGlobe('globe-container-full', false);
             else this._updateWebGLMarkers(false);
+
+            /* Auto-pause rotation when entering Cartography tab */
+            if (this._globeFull && this._globeFull.controls) {
+                this._globeFull.controls.autoRotate = false;
+                this._globeFull.isRotating = false;
+                document.getElementById('btn-globe-rotate')?.classList.remove('active');
+            }
         }, 60);
     }
 
@@ -1055,17 +1062,19 @@ function globeZoom(direction) {
     const { camera } = gs;
     const step = direction > 0 ? 0.85 : 1.18; // zoom in = pull camera closer
     camera.position.z = Math.max(14, Math.min(60, camera.position.z * step));
-    camera.updateProjectionMatrix();
+    // NOTE: updateProjectionMatrix not needed — position changes don't affect the projection matrix
 }
 
 function globeToggleRotate() {
     const gs  = echoApp._globeFull;
     const btn = document.getElementById('btn-globe-rotate');
+    const lbl = document.getElementById('rotate-label');
     if (!gs) return;
     if (gs.controls) {
         gs.isRotating = !gs.isRotating;
         gs.controls.autoRotate = gs.isRotating;
         btn?.classList.toggle('active', gs.isRotating);
+        if (lbl) lbl.textContent = gs.isRotating ? 'LIVE' : 'PAUSED';
     }
 }
 
@@ -1081,6 +1090,8 @@ function globeReset() {
         controls.autoRotate = true;
         gs.isRotating = true;
         document.getElementById('btn-globe-rotate')?.classList.add('active');
+        const lbl = document.getElementById('rotate-label');
+        if (lbl) lbl.textContent = 'LIVE';
     }
 }
 

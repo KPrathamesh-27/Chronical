@@ -391,35 +391,58 @@
 
                 <!-- Globe panel -->
                 <div class="globe-panel">
-                    <!-- Globe controls overlay -->
-                    <div class="globe-controls">
-                        <button class="globe-ctrl-btn" title="Zoom In" onclick="globeZoom(1)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                        <button class="globe-ctrl-btn" title="Zoom Out" onclick="globeZoom(-1)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                        <div class="globe-ctrl-sep"></div>
-                        <button class="globe-ctrl-btn globe-ctrl-rotate" id="btn-globe-rotate" title="Toggle Rotation" onclick="globeToggleRotate()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-                        </button>
-                        <div class="globe-ctrl-sep"></div>
-                        <button class="globe-ctrl-btn" title="Reset View" onclick="globeReset()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                        </button>
-                    </div>
-
+                    <!-- Canvas -->
                     <div class="heatmap-canvas-container">
-                        <div id="globe-container-full" style="width: 100%; height: 100%; min-height: 500px;"></div>
+                        <div id="globe-container-full" style="width: 100%; height: 100%; min-height: 520px;"></div>
                     </div>
 
-                    <!-- Stats bar inside globe panel -->
-                    <div class="globe-panel-footer">
-                        <div class="map-stat mono" id="heatmap-total">TOTAL VIEWINGS: 0</div>
-                        <div class="globe-legend">
-                            <span class="legend-dot" style="background:#ff0000"></span><span class="mono">HIGH</span>
-                            <span class="legend-dot" style="background:#ff4500"></span><span class="mono">MED</span>
-                            <span class="legend-dot" style="background:#ffa500"></span><span class="mono">LOW</span>
+                    <!-- Bottom control bar (big, aesthetic, horizontal) -->
+                    <div class="globe-ctrl-bar">
+                        <!-- Left: zoom cluster -->
+                        <div class="globe-ctrl-group">
+                            <span class="globe-ctrl-label mono">ZOOM</span>
+                            <button class="globe-ctrl-pill" title="Zoom In" onclick="globeZoom(1)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>IN</span>
+                            </button>
+                            <button class="globe-ctrl-pill" title="Zoom Out" onclick="globeZoom(-1)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>OUT</span>
+                            </button>
+                        </div>
+
+                        <div class="globe-ctrl-divider"></div>
+
+                        <!-- Center: rotate toggle (prominent) -->
+                        <div class="globe-ctrl-group">
+                            <span class="globe-ctrl-label mono">ROTATION</span>
+                            <button class="globe-ctrl-pill globe-ctrl-rotate-pill" id="btn-globe-rotate" onclick="globeToggleRotate()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                                <span id="rotate-label">PAUSED</span>
+                            </button>
+                        </div>
+
+                        <div class="globe-ctrl-divider"></div>
+
+                        <!-- Right: reset + legend -->
+                        <div class="globe-ctrl-group">
+                            <span class="globe-ctrl-label mono">VIEW</span>
+                            <button class="globe-ctrl-pill" title="Reset View" onclick="globeReset()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                <span>RESET</span>
+                            </button>
+                        </div>
+
+                        <div class="globe-ctrl-divider"></div>
+
+                        <!-- Far right: stats + legend -->
+                        <div class="globe-ctrl-group globe-ctrl-stats">
+                            <div class="map-stat mono" id="heatmap-total">VIEWINGS: 0</div>
+                            <div class="globe-legend">
+                                <span class="legend-dot" style="background:#ff2222;box-shadow:0 0 6px #ff2222"></span><span class="mono">HIGH</span>
+                                <span class="legend-dot" style="background:#ff6600;box-shadow:0 0 6px #ff6600"></span><span class="mono">MED</span>
+                                <span class="legend-dot" style="background:#ffaa00;box-shadow:0 0 6px #ffaa00"></span><span class="mono">LOW</span>
+                            </div>
                         </div>
                     </div>
                 </div>
